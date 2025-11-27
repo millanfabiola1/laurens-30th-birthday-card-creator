@@ -78,6 +78,11 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
     const wackyEffectRef = useRef(wackyEffect)
     const rainbowHueRef = useRef(0)
     
+    // Stamp drawing state (for drawing trails of stamps)
+    const isStampDrawingRef = useRef(false)
+    const lastStampPosRef = useRef<{ x: number; y: number } | null>(null)
+    const stampSpacing = 0.7 // Spacing multiplier relative to stamp size
+    
     useEffect(() => {
       saveToHistoryRef.current = saveToHistory
     }, [saveToHistory])
@@ -353,7 +358,11 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
           saveToHistoryRef.current()
           playSound('click')
         } else if (tool === 'stamp') {
-          // Add stamp at click position
+          // Start stamp drawing mode
+          isStampDrawingRef.current = true
+          lastStampPosRef.current = { x: pointer.x, y: pointer.y }
+          
+          // Add first stamp at click position
           const stamp = currentStampRef.current
           const size = stampSizeRef.current
           
@@ -390,7 +399,6 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
               canvas.add(fabricImg)
               canvas.bringObjectToFront(fabricImg)
               canvas.renderAll()
-              saveToHistoryRef.current()
               playSound('stamp')
             }).catch((err) => {
               console.error('Error loading stamp image:', stamp, err)
@@ -421,7 +429,6 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
             canvas.add(text)
             canvas.bringObjectToFront(text)
             canvas.renderAll()
-            saveToHistoryRef.current()
             playSound('stamp')
           }
         } else if (tool === 'shapes') {
@@ -597,16 +604,80 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       })
 
       canvas.on('mouse:move', (opt) => {
+        const tool = currentToolRef.current
+        const pointer = canvas.getPointer(opt.e)
+        
+        // Handle stamp drawing (trail of stamps)
+        if (tool === 'stamp' && isStampDrawingRef.current && lastStampPosRef.current) {
+          const stamp = currentStampRef.current
+          const size = stampSizeRef.current
+          const minDistance = size * stampSpacing // Minimum distance between stamps
+          
+          const dx = pointer.x - lastStampPosRef.current.x
+          const dy = pointer.y - lastStampPosRef.current.y
+          const distance = Math.sqrt(dx * dx + dy * dy)
+          
+          if (distance >= minDistance) {
+            // Update last stamp position
+            lastStampPosRef.current = { x: pointer.x, y: pointer.y }
+            
+            // Place a stamp at current position
+            if (stamp.startsWith('/stamps/')) {
+              FabricImage.fromURL(stamp, { crossOrigin: 'anonymous' }).then((fabricImg) => {
+                if (!fabricImg || !canvas) return
+                
+                const scale = size / Math.max(fabricImg.width || 50, fabricImg.height || 50)
+                
+                fabricImg.set({
+                  left: pointer.x,
+                  top: pointer.y,
+                  scaleX: scale,
+                  scaleY: scale,
+                  originX: 'center',
+                  originY: 'center',
+                  selectable: false,
+                  evented: false,
+                })
+                
+                ;(fabricImg as any).customId = `stamp-${Date.now()}`
+                ;(fabricImg as any).objectType = 'stamp'
+
+                canvas.add(fabricImg)
+                canvas.bringObjectToFront(fabricImg)
+                canvas.renderAll()
+              }).catch((err) => {
+                console.error('Error loading stamp image:', stamp, err)
+              })
+            } else {
+              // Emoji stamp fallback
+              const text = new IText(stamp, {
+                left: pointer.x,
+                top: pointer.y,
+                fontSize: size,
+                originX: 'center',
+                originY: 'center',
+                selectable: false,
+                evented: false,
+              })
+              ;(text as any).customId = `stamp-${Date.now()}`
+              ;(text as any).objectType = 'stamp'
+              
+              canvas.add(text)
+              canvas.bringObjectToFront(text)
+              canvas.renderAll()
+            }
+          }
+          return
+        }
+        
         if (!isWackyDragging) return
         
-        const tool = currentToolRef.current
         if (tool !== 'wacky') {
           isWackyDragging = false
           return
         }
 
         const effect = wackyEffectRef.current
-        const pointer = canvas.getPointer(opt.e)
         
         if (effect === 'rainbow') {
           // Draw with rainbow colors
@@ -661,6 +732,13 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       })
 
       canvas.on('mouse:up', () => {
+        // End stamp drawing
+        if (isStampDrawingRef.current) {
+          isStampDrawingRef.current = false
+          lastStampPosRef.current = null
+          saveToHistoryRef.current()
+        }
+        
         if (isWackyDragging) {
           isWackyDragging = false
           saveToHistoryRef.current()
