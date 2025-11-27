@@ -3,7 +3,7 @@
 import type React from "react"
 import { useRef, useEffect, forwardRef, useImperativeHandle, useCallback, useState, useMemo } from "react"
 import { Canvas, PencilBrush, CircleBrush, Circle, Rect, Triangle, Polygon, IText, FabricImage, FabricObject, Pattern } from "fabric"
-import { playSound } from "@/lib/sound-manager"
+import { playSound, preloadSounds } from "@/lib/sound-manager"
 import { MacWindow, macStyles } from "./mac-ui"
 import type { CanvasElement } from "@/app/page"
 import type { FillPattern, WackyEffect } from "./tool-sidebar"
@@ -141,6 +141,9 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
 
       fabricRef.current = canvas
       setIsReady(true)
+      
+      // Preload KidPix sounds
+      preloadSounds()
 
       // Handle resize
       const resizeObserver = new ResizeObserver((entries) => {
@@ -429,7 +432,7 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
             })
             canvas.renderAll()
             saveToHistoryRef.current()
-            playSound('click')
+            playSound('wacky')
           } else if (effect === 'scramble') {
             // Randomly reposition objects
             const objects = canvas.getObjects().filter((obj: any) => !obj.isBackgroundRect)
@@ -445,7 +448,7 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
             })
             canvas.renderAll()
             saveToHistoryRef.current()
-            playSound('click')
+            playSound('wacky')
           } else if (effect === 'pixelate') {
             // Add a pixelated circle at click position
             const pixelSize = 20
@@ -469,7 +472,7 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
             }
             canvas.renderAll()
             saveToHistoryRef.current()
-            playSound('click')
+            playSound('wacky')
           }
         }
       })
@@ -1026,7 +1029,7 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       
       canvas.renderAll()
       saveToHistoryRef.current()
-      playSound('click')
+      playSound('fill')
     }, [createPatternCanvas])
 
     const handleCanvasClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -1085,7 +1088,7 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
 
     const handleBackgroundSelect = (bg: typeof backgrounds[0]) => {
       setCurrentBackground(bg.value)
-      fillCanvas(bg.value)
+      fillCanvas(bg.value, 'solid')
       setShowBackgroundPicker(false)
       playSound('click')
     }

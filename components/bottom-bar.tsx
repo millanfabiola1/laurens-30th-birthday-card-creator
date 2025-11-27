@@ -44,7 +44,7 @@ export default function BottomBar({ canvasRef }: BottomBarProps) {
   }
 
   const handleRandomChaos = () => {
-    playSound("chaos")
+    playSound("wacky")
 
     const confettiCount = 40
     const confettiColors = ["#ff1493", "#a855f7", "#00e5ff", "#ffd700", "#7fff00", "#ff6ec7", "#ff69b4"]

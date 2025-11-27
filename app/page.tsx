@@ -7,6 +7,7 @@ import CanvasArea, { FabricCanvasRef, BrushShape } from "@/components/canvas-are
 import BottomBar from "@/components/bottom-bar"
 import MobileToolbar from "@/components/mobile-toolbar"
 import { IText } from "fabric"
+import { playSound } from "@/lib/sound-manager"
 
 export interface CanvasElement {
   id: string
@@ -97,6 +98,7 @@ export default function Home() {
     if (state) {
       try {
         isRestoringRef.current = true
+        playSound('undo')
         canvas.loadFromJSON(state.json).then(() => {
           canvas.renderAll()
           setHistoryIndex(newIndex)
@@ -122,6 +124,7 @@ export default function Home() {
     if (state) {
       try {
         isRestoringRef.current = true
+        playSound('undo')  // Same sound for redo
         canvas.loadFromJSON(state.json).then(() => {
           canvas.renderAll()
           setHistoryIndex(newIndex)
