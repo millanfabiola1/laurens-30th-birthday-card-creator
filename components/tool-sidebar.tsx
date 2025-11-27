@@ -276,11 +276,14 @@ function PaginatedPicker({
               minHeight: "44px",
             }}
           >
-            {item.isImage ? (
+            {item.isImage || item.label.startsWith('/stamps/') ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img 
                 src={item.label} 
                 alt="stamp" 
-                className="w-8 h-8 object-contain"
+                width={32}
+                height={32}
+                style={{ width: '32px', height: '32px', objectFit: 'contain' }}
                 draggable={false}
               />
             ) : (
