@@ -414,8 +414,8 @@ export default function ToolSidebar({
     ...Array.from({ length: 18 }, (_, i) => i + 1),
     ...Array.from({ length: 89 }, (_, i) => i + 21),
   ].map(n => ({
-    id: `/stamps/kidpix-spritesheet-0-${n}.svg`,
-    label: `/stamps/kidpix-spritesheet-0-${n}.svg`,
+    id: `/stamps/kidpix-spritesheet-0-${n}.png`,
+    label: `/stamps/kidpix-spritesheet-0-${n}.png`,
     isImage: true,
   }))
 
