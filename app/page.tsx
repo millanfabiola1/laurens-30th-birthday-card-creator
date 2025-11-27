@@ -34,7 +34,7 @@ export default function Home() {
   const [currentFont, setCurrentFont] = useState<string>("pixel")
   const [canvasElements, setCanvasElements] = useState<CanvasElement[]>([])
   const [mobilePanel, setMobilePanel] = useState<"none" | "tools" | "colors" | "options" | "stamps" | "shapes" | "brushOptions" | "eraserOptions">("none")
-  const [currentStamp, setCurrentStamp] = useState<string>("⭐")
+  const [currentStamp, setCurrentStamp] = useState<string>("/stamps/kidpix-spritesheet-0-1.svg")
   const [stampSize, setStampSize] = useState<number>(48)
   const [currentShape, setCurrentShape] = useState<string>("heart")
   const [currentPattern, setCurrentPattern] = useState<FillPattern>("solid")

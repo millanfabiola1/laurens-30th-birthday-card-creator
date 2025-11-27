@@ -716,33 +716,76 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       const canvas = fabricRef.current
       if (!canvas) return
 
-      const text = new IText(currentStamp, {
-        left: x,
-        top: y,
-        fontSize: brushSize * 4,
-        originX: 'center',
-        originY: 'center',
-        selectable: currentTool === 'move',
-        evented: currentTool === 'move',
-        // Enable scaling controls
-        hasControls: true,
-        hasBorders: true,
-        cornerColor: '#ff1493',
-        cornerStyle: 'circle',
-        cornerSize: 12,
-        borderColor: '#ff1493',
-        transparentCorners: false,
-        lockUniScaling: false,
-        minScaleLimit: 0.1,
-      })
-      ;(text as any).customId = `stamp-${Date.now()}`
-      ;(text as any).objectType = 'stamp'
+      const stamp = currentStampRef.current
+      const size = stampSizeRef.current
 
-      canvas.add(text)
-      canvas.bringObjectToFront(text)
-      canvas.renderAll()
-      playSound('stamp')
-    }, [currentStamp, brushSize, currentTool])
+      // Check if it's an image stamp (path starting with /stamps/)
+      if (stamp.startsWith('/stamps/')) {
+        // Load image stamp
+        FabricImage.fromURL(stamp).then((img) => {
+          if (!img || !canvas) return
+          
+          // Scale image to desired size
+          const scale = size / Math.max(img.width || 50, img.height || 50)
+          
+          img.set({
+            left: x,
+            top: y,
+            scaleX: scale,
+            scaleY: scale,
+            originX: 'center',
+            originY: 'center',
+            selectable: currentToolRef.current === 'move',
+            evented: currentToolRef.current === 'move',
+            hasControls: true,
+            hasBorders: true,
+            cornerColor: '#ff1493',
+            cornerStyle: 'circle',
+            cornerSize: 12,
+            borderColor: '#ff1493',
+            transparentCorners: false,
+            lockUniScaling: false,
+            minScaleLimit: 0.1,
+          })
+          ;(img as any).customId = `stamp-${Date.now()}`
+          ;(img as any).objectType = 'stamp'
+
+          canvas.add(img)
+          canvas.bringObjectToFront(img)
+          canvas.renderAll()
+          playSound('stamp')
+        }).catch((err) => {
+          console.error('Error loading stamp image:', err)
+        })
+      } else {
+        // Emoji stamp (legacy fallback)
+        const text = new IText(stamp, {
+          left: x,
+          top: y,
+          fontSize: size,
+          originX: 'center',
+          originY: 'center',
+          selectable: currentToolRef.current === 'move',
+          evented: currentToolRef.current === 'move',
+          hasControls: true,
+          hasBorders: true,
+          cornerColor: '#ff1493',
+          cornerStyle: 'circle',
+          cornerSize: 12,
+          borderColor: '#ff1493',
+          transparentCorners: false,
+          lockUniScaling: false,
+          minScaleLimit: 0.1,
+        })
+        ;(text as any).customId = `stamp-${Date.now()}`
+        ;(text as any).objectType = 'stamp'
+
+        canvas.add(text)
+        canvas.bringObjectToFront(text)
+        canvas.renderAll()
+        playSound('stamp')
+      }
+    }, [])
 
     const addShape = useCallback((x: number, y: number) => {
       const canvas = fabricRef.current

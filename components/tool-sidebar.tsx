@@ -226,7 +226,7 @@ function PaginatedPicker({
   gradient,
 }: {
   title: string
-  items: { id: string; label: string }[]
+  items: { id: string; label: string; isImage?: boolean }[]
   currentItem: string
   onSelect: (id: string) => void
   itemsPerPage?: number
@@ -264,7 +264,7 @@ function PaginatedPicker({
               onSelect(item.id)
               playSound("click")
             }}
-            className="text-2xl p-2 transition-transform hover:scale-110"
+            className="flex items-center justify-center p-1 transition-transform hover:scale-110"
             style={{
               background: currentItem === item.id 
                 ? "linear-gradient(180deg, #ffc0e0 0%, #ff69b4 100%)"
@@ -273,9 +273,19 @@ function PaginatedPicker({
               boxShadow: currentItem === item.id
                 ? "inset 2px 2px 0 0 #c71585, inset -2px -2px 0 0 #ffffff"
                 : "inset -2px -2px 0 0 #c71585, inset 2px 2px 0 0 #ffffff, 2px 2px 0 0 #c71585",
+              minHeight: "44px",
             }}
           >
-            {item.label}
+            {item.isImage ? (
+              <img 
+                src={item.label} 
+                alt="stamp" 
+                className="w-8 h-8 object-contain"
+                draggable={false}
+              />
+            ) : (
+              <span className="text-2xl">{item.label}</span>
+            )}
           </button>
         ))}
       </div>
@@ -396,12 +406,15 @@ export default function ToolSidebar({
     { text: "Forever 21 + 9", style: "accent" as const },
   ]
 
+  // Generate stamp list from KidPix icons (1-109, skipping 19-20 which don't exist)
   const stamps = [
-    "⭐", "✨", "💖", "🎂", "🎁", "🎈", "🎉", "🦋", 
-    "🌸", "🌈", "💎", "👑", "🎀", "💫", "🔥", "💕",
-    "🍰", "🧁", "🎊", "🥳", "💝", "🌟", "🎵", "🎶",
-    "🦄", "🌺", "🍬", "🍭", "💐", "🥂", "🎤", "💃",
-  ].map(s => ({ id: s, label: s }))
+    ...Array.from({ length: 18 }, (_, i) => i + 1),
+    ...Array.from({ length: 89 }, (_, i) => i + 21),
+  ].map(n => ({
+    id: `/stamps/kidpix-spritesheet-0-${n}.svg`,
+    label: `/stamps/kidpix-spritesheet-0-${n}.svg`,
+    isImage: true,
+  }))
 
   const shapes = [
     { id: "heart", label: "💜" },
