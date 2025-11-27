@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useRef, useEffect, forwardRef, useImperativeHandle, useCallback, useState, useMemo } from "react"
-import { Canvas, PencilBrush, CircleBrush, Circle, Rect, Triangle, Polygon, IText, FabricImage, FabricObject, Pattern } from "fabric"
+import { Canvas, PencilBrush, CircleBrush, Circle, Rect, Triangle, Polygon, IText, FabricImage, FabricObject, Pattern, loadSVGFromURL, util } from "fabric"
 import { playSound, preloadSounds } from "@/lib/sound-manager"
 import { MacWindow, macStyles } from "./mac-ui"
 import type { CanvasElement } from "@/app/page"
@@ -721,51 +721,95 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
 
       // Check if it's an image stamp (path starting with /stamps/)
       if (stamp.startsWith('/stamps/')) {
-        // Create an HTML image element first
-        const imgElement = new Image()
-        imgElement.crossOrigin = 'anonymous'
-        
-        imgElement.onload = () => {
-          // Create Fabric image from the loaded HTML image
-          const fabricImg = new FabricImage(imgElement, {
-            left: x,
-            top: y,
-            originX: 'center',
-            originY: 'center',
-            selectable: currentToolRef.current === 'move',
-            evented: currentToolRef.current === 'move',
-            hasControls: true,
-            hasBorders: true,
-            cornerColor: '#ff1493',
-            cornerStyle: 'circle',
-            cornerSize: 12,
-            borderColor: '#ff1493',
-            transparentCorners: false,
-            lockUniScaling: false,
-            minScaleLimit: 0.1,
-          })
-          
-          // Scale image to desired size
-          const scale = size / Math.max(fabricImg.width || 50, fabricImg.height || 50)
-          fabricImg.set({
-            scaleX: scale,
-            scaleY: scale,
-          })
-          
-          ;(fabricImg as any).customId = `stamp-${Date.now()}`
-          ;(fabricImg as any).objectType = 'stamp'
+        // Use Fabric's loadSVGFromURL for SVG files
+        if (stamp.endsWith('.svg')) {
+          loadSVGFromURL(stamp).then(({ objects, options }) => {
+            if (!canvas) return
+            
+            // Filter out null objects and group the SVG objects
+            const validObjects = objects.filter((obj): obj is FabricObject => obj !== null)
+            if (validObjects.length === 0) return
+            
+            const svgGroup = util.groupSVGElements(validObjects, options)
+            
+            // Scale to desired size
+            const scale = size / Math.max(svgGroup.width || 50, svgGroup.height || 50)
+            
+            svgGroup.set({
+              left: x,
+              top: y,
+              scaleX: scale,
+              scaleY: scale,
+              originX: 'center',
+              originY: 'center',
+              selectable: currentToolRef.current === 'move',
+              evented: currentToolRef.current === 'move',
+              hasControls: true,
+              hasBorders: true,
+              cornerColor: '#ff1493',
+              cornerStyle: 'circle',
+              cornerSize: 12,
+              borderColor: '#ff1493',
+              transparentCorners: false,
+              lockUniScaling: false,
+              minScaleLimit: 0.1,
+            })
+            
+            ;(svgGroup as any).customId = `stamp-${Date.now()}`
+            ;(svgGroup as any).objectType = 'stamp'
 
-          canvas.add(fabricImg)
-          canvas.bringObjectToFront(fabricImg)
-          canvas.renderAll()
-          playSound('stamp')
+            canvas.add(svgGroup)
+            canvas.bringObjectToFront(svgGroup)
+            canvas.renderAll()
+            playSound('stamp')
+          }).catch((err) => {
+            console.error('Error loading SVG stamp:', err)
+          })
+        } else {
+          // For non-SVG images, use Image element
+          const imgElement = new Image()
+          imgElement.crossOrigin = 'anonymous'
+          
+          imgElement.onload = () => {
+            const fabricImg = new FabricImage(imgElement, {
+              left: x,
+              top: y,
+              originX: 'center',
+              originY: 'center',
+              selectable: currentToolRef.current === 'move',
+              evented: currentToolRef.current === 'move',
+              hasControls: true,
+              hasBorders: true,
+              cornerColor: '#ff1493',
+              cornerStyle: 'circle',
+              cornerSize: 12,
+              borderColor: '#ff1493',
+              transparentCorners: false,
+              lockUniScaling: false,
+              minScaleLimit: 0.1,
+            })
+            
+            const scale = size / Math.max(fabricImg.width || 50, fabricImg.height || 50)
+            fabricImg.set({
+              scaleX: scale,
+              scaleY: scale,
+            })
+            
+            ;(fabricImg as any).customId = `stamp-${Date.now()}`
+            ;(fabricImg as any).objectType = 'stamp'
+
+            canvas.add(fabricImg)
+            canvas.bringObjectToFront(fabricImg)
+            canvas.renderAll()
+            playSound('stamp')
+          }
+          
+          imgElement.onerror = (err) => {
+            console.error('Error loading stamp image:', err)
+          }
+          
+          imgElement.src = stamp
         }
-        
-        imgElement.onerror = (err) => {
-          console.error('Error loading stamp image:', err)
-        }
-        
-        imgElement.src = stamp
       } else {
         // Emoji stamp (legacy fallback)
         const text = new IText(stamp, {
