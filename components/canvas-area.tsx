@@ -64,6 +64,7 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
     const canvasElRef = useRef<HTMLCanvasElement>(null)
     const fabricRef = useRef<Canvas | null>(null)
     const [isReady, setIsReady] = useState(false)
+    const [stampCursorUrl, setStampCursorUrl] = useState<string>('')
     
     // Use refs to always have latest values in Fabric.js event handlers
     const saveToHistoryRef = useRef(saveToHistory)
@@ -91,6 +92,37 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       stampSizeRef.current = stampSize
       wackyEffectRef.current = wackyEffect
     }, [currentTool, currentColor, currentPattern, currentStamp, currentShape, brushSize, stampSize, wackyEffect])
+
+    // Generate cursor image for stamp tool
+    useEffect(() => {
+      if (currentTool !== 'stamp' || !currentStamp.startsWith('/stamps/')) {
+        setStampCursorUrl('')
+        return
+      }
+
+      // Create a small canvas to resize the stamp for cursor use
+      const cursorSize = 32 // Browser cursor size limit
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        canvas.width = cursorSize
+        canvas.height = cursorSize
+        const ctx = canvas.getContext('2d')
+        if (ctx) {
+          // Draw the stamp image scaled to cursor size
+          ctx.drawImage(img, 0, 0, cursorSize, cursorSize)
+          setStampCursorUrl(canvas.toDataURL('image/png'))
+        }
+      }
+      
+      img.onerror = () => {
+        setStampCursorUrl('')
+      }
+      
+      img.src = currentStamp
+    }, [currentTool, currentStamp])
 
     useImperativeHandle(ref, () => ({
       canvas: fabricRef.current,
@@ -1242,7 +1274,18 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
           ref={canvasElRef}
           onClick={handleCanvasClick}
           className="w-full h-full touch-none"
-          style={{ touchAction: 'none' }}
+          style={{ 
+            touchAction: 'none',
+            cursor: currentTool === 'stamp' && stampCursorUrl
+              ? `url(${stampCursorUrl}) 16 16, crosshair`
+              : currentTool === 'stamp' 
+                ? 'crosshair' 
+                : currentTool === 'brush' || currentTool === 'eraser'
+                  ? 'crosshair'
+                  : currentTool === 'fill'
+                    ? 'crosshair'
+                    : 'default'
+          }}
         />
       </MacWindow>
     )
