@@ -206,3 +206,84 @@
     background-position: 200% center;
   }
 }
+
+/* 8-bit pixelated emoji styling */
+.pixel-emoji {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  image-rendering: pixelated;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: grayscale;
+  font-smooth: never;
+  filter: contrast(1.1);
+}
+
+/* Small pixel emoji - renders at 8px and scales up 3x */
+.pixel-emoji-sm {
+  font-size: 8px;
+  width: 24px;
+  height: 24px;
+  transform: scale(3);
+  transform-origin: center;
+}
+
+/* Medium pixel emoji - renders at 10px and scales up 2.5x */
+.pixel-emoji-md {
+  font-size: 10px;
+  width: 25px;
+  height: 25px;
+  transform: scale(2.5);
+  transform-origin: center;
+}
+
+/* Large pixel emoji - renders at 12px and scales up 3x */
+.pixel-emoji-lg {
+  font-size: 12px;
+  width: 36px;
+  height: 36px;
+  transform: scale(3);
+  transform-origin: center;
+}
+
+/* Container for pixel emojis to prevent layout issues from scaling */
+.pixel-emoji-container {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.pixel-emoji-container-sm {
+  width: 24px;
+  height: 24px;
+}
+
+.pixel-emoji-container-md {
+  width: 28px;
+  height: 28px;
+}
+
+.pixel-emoji-container-lg {
+  width: 36px;
+  height: 36px;
+}
+
+/* Alternative approach: CSS pixelation filter */
+.pixelate {
+  image-rendering: pixelated;
+  -webkit-font-smoothing: none;
+  filter: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"><filter id="pixelate"><feFlood x="4" y="4" height="2" width="2"/><feComposite width="8" height="8"/><feTile result="a"/><feComposite in="SourceGraphic" in2="a" operator="in"/><feMorphology operator="dilate" radius="4"/></filter></svg>#pixelate');
+}
+
+/* Simple blocky emoji effect using text-shadow */
+.blocky-emoji {
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: grayscale;
+  font-smooth: never;
+  text-shadow: 
+    0 0 0 currentColor,
+    1px 0 0 rgba(0,0,0,0.1),
+    0 1px 0 rgba(0,0,0,0.1);
+  filter: contrast(1.2) saturate(1.1);
+}

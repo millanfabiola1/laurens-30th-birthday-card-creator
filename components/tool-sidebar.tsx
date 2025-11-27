@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { playSound } from "@/lib/sound-manager"
 import { MacWindow, MacButton, ToolIcon } from "./mac-ui"
+import { PixelEmoji } from "./pixel-emoji"
 import type { BrushShape } from "./canvas-area"
 
 export type FillPattern = 
@@ -264,7 +265,7 @@ function PaginatedPicker({
               onSelect(item.id)
               playSound("click")
             }}
-            className="text-2xl p-2 transition-transform hover:scale-110"
+            className="flex items-center justify-center p-2 transition-transform hover:scale-110"
             style={{
               background: currentItem === item.id 
                 ? "linear-gradient(180deg, #ffc0e0 0%, #ff69b4 100%)"
@@ -275,7 +276,7 @@ function PaginatedPicker({
                 : "inset -2px -2px 0 0 #c71585, inset 2px 2px 0 0 #ffffff, 2px 2px 0 0 #c71585",
             }}
           >
-            {item.label}
+            <PixelEmoji emoji={item.label} size="lg" />
           </button>
         ))}
       </div>
@@ -503,7 +504,7 @@ export default function ToolSidebar({
                     active={brushShape === shape.id}
                     style={{ padding: "4px 8px" }}
                   >
-                    <span className="text-sm">{shape.icon}</span>
+                    <PixelEmoji emoji={shape.icon} size="sm" />
                   </MacButton>
                 ))}
               </div>
@@ -548,7 +549,7 @@ export default function ToolSidebar({
                     active={eraserShape === shape.id}
                     style={{ padding: "4px 8px" }}
                   >
-                    <span className="text-sm">{shape.icon}</span>
+                    <PixelEmoji emoji={shape.icon} size="sm" />
                   </MacButton>
                 ))}
               </div>
@@ -755,9 +756,9 @@ export default function ToolSidebar({
                     playSound("click")
                   }}
                   active={wackyEffect === effect.id}
-                  className="w-full"
+                  className="w-full flex items-center"
                 >
-                  <span className="mr-2">{effect.icon}</span>
+                  <span className="mr-2"><PixelEmoji emoji={effect.icon} size="sm" /></span>
                   {effect.label}
                 </MacButton>
               ))}
@@ -792,7 +793,7 @@ export default function ToolSidebar({
               title={tool.tooltip}
               style={{ width: "44px", height: "44px" }}
             >
-              <span className="text-lg">{tool.label}</span>
+              <PixelEmoji emoji={tool.label} size="md" />
             </ToolIcon>
           ))}
           <ToolIcon
@@ -801,7 +802,7 @@ export default function ToolSidebar({
             title="Undo"
             style={{ width: "44px", height: "44px", opacity: canUndo ? 1 : 0.5 }}
           >
-            <span className="text-lg">↩️</span>
+            <PixelEmoji emoji="↩️" size="md" />
           </ToolIcon>
           <ToolIcon
             onClick={() => handleUndoRedo("redo")}
@@ -809,7 +810,7 @@ export default function ToolSidebar({
             title="Redo"
             style={{ width: "44px", height: "44px", opacity: canRedo ? 1 : 0.5 }}
           >
-            <span className="text-lg">↪️</span>
+            <PixelEmoji emoji="↪️" size="md" />
           </ToolIcon>
         </div>
         {activeDrawer && <div className="mt-3">{renderDrawer()}</div>}
@@ -830,7 +831,7 @@ export default function ToolSidebar({
                 active={currentTool === tool.id}
                 title={tool.tooltip}
               >
-                <span className="text-lg">{tool.label}</span>
+                <PixelEmoji emoji={tool.label} size="md" />
               </ToolIcon>
               <span 
                 className="text-[9px] pixel-text mt-0.5 text-center leading-tight"
@@ -848,7 +849,7 @@ export default function ToolSidebar({
               title="Undo"
               style={{ opacity: canUndo ? 1 : 0.5 }}
             >
-              <span className="text-lg">↩️</span>
+              <PixelEmoji emoji="↩️" size="md" />
             </ToolIcon>
             <span 
               className="text-[9px] pixel-text mt-0.5 text-center leading-tight"
@@ -864,7 +865,7 @@ export default function ToolSidebar({
               title="Redo"
               style={{ opacity: canRedo ? 1 : 0.5 }}
             >
-              <span className="text-lg">↪️</span>
+              <PixelEmoji emoji="↪️" size="md" />
             </ToolIcon>
             <span 
               className="text-[9px] pixel-text mt-0.5 text-center leading-tight"
