@@ -721,18 +721,15 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
 
       // Check if it's an image stamp (path starting with /stamps/)
       if (stamp.startsWith('/stamps/')) {
-        // Load image stamp
-        FabricImage.fromURL(stamp).then((img) => {
-          if (!img || !canvas) return
-          
-          // Scale image to desired size
-          const scale = size / Math.max(img.width || 50, img.height || 50)
-          
-          img.set({
+        // Create an HTML image element first
+        const imgElement = new Image()
+        imgElement.crossOrigin = 'anonymous'
+        
+        imgElement.onload = () => {
+          // Create Fabric image from the loaded HTML image
+          const fabricImg = new FabricImage(imgElement, {
             left: x,
             top: y,
-            scaleX: scale,
-            scaleY: scale,
             originX: 'center',
             originY: 'center',
             selectable: currentToolRef.current === 'move',
@@ -747,16 +744,28 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
             lockUniScaling: false,
             minScaleLimit: 0.1,
           })
-          ;(img as any).customId = `stamp-${Date.now()}`
-          ;(img as any).objectType = 'stamp'
+          
+          // Scale image to desired size
+          const scale = size / Math.max(fabricImg.width || 50, fabricImg.height || 50)
+          fabricImg.set({
+            scaleX: scale,
+            scaleY: scale,
+          })
+          
+          ;(fabricImg as any).customId = `stamp-${Date.now()}`
+          ;(fabricImg as any).objectType = 'stamp'
 
-          canvas.add(img)
-          canvas.bringObjectToFront(img)
+          canvas.add(fabricImg)
+          canvas.bringObjectToFront(fabricImg)
           canvas.renderAll()
           playSound('stamp')
-        }).catch((err) => {
+        }
+        
+        imgElement.onerror = (err) => {
           console.error('Error loading stamp image:', err)
-        })
+        }
+        
+        imgElement.src = stamp
       } else {
         // Emoji stamp (legacy fallback)
         const text = new IText(stamp, {
