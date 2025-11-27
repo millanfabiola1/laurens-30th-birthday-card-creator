@@ -1,0 +1,208 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Barbie Beauty Styler + Mac hybrid color palette - vibrant pinks, purples, aquas */
+  --background: #ffb6d9;
+  --foreground: #4a0033;
+  --card: #fff0f7;
+  --card-foreground: #4a0033;
+  --popover: #fff0f7;
+  --popover-foreground: #4a0033;
+  --primary: #ff1493;
+  --primary-foreground: #ffffff;
+  --secondary: #a855f7;
+  --secondary-foreground: #ffffff;
+  --muted: #ffc0e0;
+  --muted-foreground: #9a3070;
+  --accent: #00e5ff;
+  --accent-foreground: #004050;
+  --destructive: #ff0066;
+  --destructive-foreground: #ffffff;
+  --border: #ff69b4;
+  --input: #ffffff;
+  --ring: #ff1493;
+  --chart-1: #ff6ec7;
+  --chart-2: #00e5ff;
+  --chart-3: #a855f7;
+  --chart-4: #ffd700;
+  --chart-5: #7fff00;
+  --radius: 0px;
+  --sidebar: #fff0f7;
+  --sidebar-foreground: #4a0033;
+  --sidebar-primary: #ff1493;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #ffc0e0;
+  --sidebar-accent-foreground: #4a0033;
+  --sidebar-border: #ff69b4;
+  --sidebar-ring: #ff1493;
+}
+
+.dark {
+  --background: #2d0a1f;
+  --foreground: #ffb6d9;
+  --card: #3d1530;
+  --card-foreground: #ffb6d9;
+  --popover: #3d1530;
+  --popover-foreground: #ffb6d9;
+  --primary: #ff69b4;
+  --primary-foreground: #2d0a1f;
+  --secondary: #a855f7;
+  --secondary-foreground: #ffffff;
+  --muted: #4a1f3a;
+  --muted-foreground: #ff9ed0;
+  --accent: #00e5ff;
+  --accent-foreground: #ffffff;
+  --destructive: #ff4757;
+  --destructive-foreground: #ffffff;
+  --border: #ff69b4;
+  --input: #3d1530;
+  --ring: #ff69b4;
+}
+
+@theme inline {
+  /* Updated font families to use the new Google Fonts */
+  --font-sans: var(--font-pixel), "Pixelify Sans", system-ui, sans-serif;
+  --font-mono: "Monaco", "Courier New", monospace;
+  /* Custom font variables for the card creator */
+  --font-pixel: "Pixelify Sans", monospace;
+  --font-bubble: "Bagel Fat One", cursive;
+  --font-script: "Imperial Script", cursive;
+  --font-narrow: "Instrument Serif", serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Pixel text styling */
+.pixel-text {
+  font-family: "Comic Sans MS", "Chalkboard", "Geneva", monospace;
+  letter-spacing: 0.5px;
+  image-rendering: pixelated;
+}
+
+/* Colorful glittery scrollbar */
+.mac-scrollbar::-webkit-scrollbar {
+  width: 16px;
+}
+
+.mac-scrollbar::-webkit-scrollbar-track {
+  background: linear-gradient(180deg, #ffc0e0 0%, #ffb6d9 100%);
+  border-left: 2px solid #ff69b4;
+}
+
+.mac-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #ff69b4 0%, #ff1493 100%);
+  border: 2px solid #ff1493;
+  box-shadow: inset -1px -1px 0 0 #c71585, inset 1px 1px 0 0 #ffb6d9;
+}
+
+/* Colorful sparkly confetti */
+.confetti {
+  animation: confetti-fall 2s ease-in forwards;
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  text-shadow: 0 0 5px currentColor;
+}
+
+@keyframes confetti-fall {
+  to {
+    transform: translateY(100vh) rotateZ(720deg);
+    opacity: 0;
+  }
+}
+
+/* Vibrant pink gradient desktop with hearts pattern */
+.mac-desktop {
+  background: linear-gradient(135deg, #ffb6d9 0%, #ffc0e0 25%, #e0b0ff 50%, #b0e0ff 75%, #ffc0e0 100%);
+  background-size: 400% 400%;
+  animation: gradient-shift 15s ease infinite;
+}
+
+@keyframes gradient-shift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Sparkle animation for decorative elements */
+@keyframes sparkle {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.8);
+  }
+}
+
+.sparkle {
+  animation: sparkle 1.5s ease-in-out infinite;
+}
+
+/* Rainbow text effect */
+.rainbow-text {
+  background: linear-gradient(90deg, #ff1493, #ff6ec7, #a855f7, #00e5ff, #7fff00, #ffd700, #ff1493);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: rainbow-shift 3s linear infinite;
+}
+
+@keyframes rainbow-shift {
+  to {
+    background-position: 200% center;
+  }
+}
