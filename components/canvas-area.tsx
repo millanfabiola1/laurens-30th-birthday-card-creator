@@ -296,31 +296,73 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
           const stamp = currentStampRef.current
           const size = stampSizeRef.current
           
-          const text = new IText(stamp, {
-            left: pointer.x,
-            top: pointer.y,
-            fontSize: size,
-            originX: 'center',
-            originY: 'center',
-            selectable: false,
-            evented: false,
-            hasControls: true,
-            hasBorders: true,
-            cornerColor: '#ff1493',
-            cornerStyle: 'circle',
-            cornerSize: 12,
-            borderColor: '#ff1493',
-            transparentCorners: false,
-            lockUniScaling: false,
-            minScaleLimit: 0.1,
-          })
-          ;(text as any).customId = `stamp-${Date.now()}`
-          ;(text as any).objectType = 'stamp'
-          
-          canvas.add(text)
-          canvas.bringObjectToFront(text)
-          canvas.renderAll()
-          playSound('stamp')
+          // Check if it's an image stamp
+          if (stamp.startsWith('/stamps/')) {
+            FabricImage.fromURL(stamp, { crossOrigin: 'anonymous' }).then((fabricImg) => {
+              if (!fabricImg || !canvas) return
+              
+              const scale = size / Math.max(fabricImg.width || 50, fabricImg.height || 50)
+              
+              fabricImg.set({
+                left: pointer.x,
+                top: pointer.y,
+                scaleX: scale,
+                scaleY: scale,
+                originX: 'center',
+                originY: 'center',
+                selectable: false,
+                evented: false,
+                hasControls: true,
+                hasBorders: true,
+                cornerColor: '#ff1493',
+                cornerStyle: 'circle',
+                cornerSize: 12,
+                borderColor: '#ff1493',
+                transparentCorners: false,
+                lockUniScaling: false,
+                minScaleLimit: 0.1,
+              })
+              
+              ;(fabricImg as any).customId = `stamp-${Date.now()}`
+              ;(fabricImg as any).objectType = 'stamp'
+
+              canvas.add(fabricImg)
+              canvas.bringObjectToFront(fabricImg)
+              canvas.renderAll()
+              saveToHistoryRef.current()
+              playSound('stamp')
+            }).catch((err) => {
+              console.error('Error loading stamp image:', stamp, err)
+            })
+          } else {
+            // Emoji stamp fallback
+            const text = new IText(stamp, {
+              left: pointer.x,
+              top: pointer.y,
+              fontSize: size,
+              originX: 'center',
+              originY: 'center',
+              selectable: false,
+              evented: false,
+              hasControls: true,
+              hasBorders: true,
+              cornerColor: '#ff1493',
+              cornerStyle: 'circle',
+              cornerSize: 12,
+              borderColor: '#ff1493',
+              transparentCorners: false,
+              lockUniScaling: false,
+              minScaleLimit: 0.1,
+            })
+            ;(text as any).customId = `stamp-${Date.now()}`
+            ;(text as any).objectType = 'stamp'
+            
+            canvas.add(text)
+            canvas.bringObjectToFront(text)
+            canvas.renderAll()
+            saveToHistoryRef.current()
+            playSound('stamp')
+          }
         } else if (tool === 'shapes') {
           // Add shape at click position
           const shapeType = currentShapeRef.current
