@@ -124,6 +124,35 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       img.src = currentStamp
     }, [currentTool, currentStamp])
 
+    // Update Fabric.js canvas cursor when stamp cursor changes
+    useEffect(() => {
+      const canvas = fabricRef.current
+      if (!canvas) return
+
+      if (currentTool === 'stamp' && stampCursorUrl) {
+        const cursorStyle = `url(${stampCursorUrl}) 16 16, crosshair`
+        canvas.defaultCursor = cursorStyle
+        canvas.hoverCursor = cursorStyle
+        // Also set on the upper canvas element directly
+        const upperCanvas = canvas.upperCanvasEl
+        if (upperCanvas) {
+          upperCanvas.style.cursor = cursorStyle
+        }
+      } else if (currentTool === 'stamp') {
+        canvas.defaultCursor = 'crosshair'
+        canvas.hoverCursor = 'crosshair'
+      } else if (currentTool === 'brush' || currentTool === 'eraser') {
+        canvas.defaultCursor = 'crosshair'
+        canvas.hoverCursor = 'crosshair'
+      } else if (currentTool === 'fill') {
+        canvas.defaultCursor = 'crosshair'
+        canvas.hoverCursor = 'crosshair'
+      } else {
+        canvas.defaultCursor = 'default'
+        canvas.hoverCursor = 'move'
+      }
+    }, [currentTool, stampCursorUrl, isReady])
+
     useImperativeHandle(ref, () => ({
       canvas: fabricRef.current,
       toDataURL: () => {
