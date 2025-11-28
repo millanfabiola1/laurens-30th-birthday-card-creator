@@ -556,6 +556,9 @@ export default function ToolSidebar({
     { text: "Happy 30th Lauren!", style: "primary" as const },
     { text: "Dirty 30!", style: "secondary" as const },
     { text: "Forever 21 + 9", style: "accent" as const },
+    { text: "I love you Lauren", style: "primary" as const },
+    { text: "Slaaaaaay!", style: "secondary" as const },
+    { text: "Happy Birthday Queen!", style: "accent" as const },
   ]
 
   // Generate stamp list from KidPix icons (1-109, skipping 19-20 which don't exist)
@@ -1013,10 +1016,10 @@ export default function ToolSidebar({
               </div>
             </div>
 
-            {/* Lauren Specials */}
+            {/* Quotes */}
             <div>
               <SectionHeader gradient="linear-gradient(90deg, #00e5ff 0%, #7fff00 100%)">
-                ✨ Lauren Specials
+                ✨ Quotes
               </SectionHeader>
               <div className="space-y-1.5">
                 {laurenSpecials.map((special, i) => (

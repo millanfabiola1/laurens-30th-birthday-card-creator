@@ -182,10 +182,16 @@ export default function Home() {
       const canvas = canvasRef.current?.canvas
       if (!canvas) return
 
+      // Center the text on the canvas
+      const canvasWidth = canvas.width || 800
+      const canvasHeight = canvas.height || 600
+      const centerX = canvasWidth / 2
+      const centerY = canvasHeight / 2
+
       const itext = new IText(text, {
-        left: 150 + Math.random() * 100,
-        top: 150 + Math.random() * 100,
-        fontSize: 32,
+        left: centerX,
+        top: centerY,
+        fontSize: 96, // Very large text
         fontFamily: getFontFamily(currentFont),
         fill: currentColor,
         originX: 'center',
