@@ -72,10 +72,11 @@ export default function MobileToolbar({
   ]
   const sizes = [2, 5, 10, 15, 20]
   const fonts = [
-    { id: "pixel", name: "Pixel", style: 'var(--font-pixel), "Doto", sans-serif' },
-    { id: "bubble", name: "Bubble", style: 'var(--font-bubble), "DynaPuff", cursive' },
-    { id: "script", name: "Script", style: 'var(--font-script), "Imperial Script", cursive' },
-    { id: "narrow", name: "Narrow", style: 'var(--font-narrow), "Instrument Serif", serif' },
+    { id: "pixel", name: "Pixel", style: '"Doto", sans-serif' },
+    { id: "bubble", name: "Bubble", style: '"DynaPuff", cursive' },
+    { id: "script", name: "Script", style: '"Imperial Script", cursive' },
+    { id: "narrow", name: "Narrow", style: '"Instrument Serif", serif' },
+    { id: "sans-serif", name: "Sans Serif", style: '"Geist", sans-serif' },
   ]
   const brushShapes: { id: BrushShape; label: string; icon: string }[] = [
     { id: "round", label: "Round", icon: "⚫" },
