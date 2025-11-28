@@ -393,10 +393,10 @@ export default function BottomBar({ canvasRef }: BottomBarProps) {
       <div className="flex gap-2 flex-wrap justify-center">
         <MacButton onClick={handleNewCard}>New</MacButton>
         <MacButton secondary onClick={handleRandomChaos} disabled={isGenerating}>
-          {isGenerating ? "Creating..." : "Chaos!"}
+          {isGenerating ? "✨ Creating..." : "🔀 Random Design"}
         </MacButton>
         <MacButton primary onClick={handleSaveScreenshot} disabled={isExporting}>
-          {isExporting ? "Saving..." : "Save"}
+          {isExporting ? "💾 Saving..." : "💾 Save"}
         </MacButton>
       </div>
       <Countdown targetDate="2025-12-21" timezone="America/Denver" />
