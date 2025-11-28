@@ -1143,12 +1143,42 @@ export default function ToolSidebar({
     )
   }
 
+  // Helper to render background preview
+  const renderBackgroundPreview = () => {
+    if (!currentBackground || currentBackground === '#ffffff') {
+      // Default - show emoji
+      return <span className="text-lg">🎨</span>
+    }
+    
+    // Check if it's an image (starts with /)
+    if (currentBackground.startsWith('/')) {
+      return (
+        <div 
+          className="w-8 h-8 rounded border-2 border-white"
+          style={{
+            backgroundImage: `url(${currentBackground})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        />
+      )
+    }
+    
+    // It's a color
+    return (
+      <div 
+        className="w-8 h-8 rounded border-2 border-white"
+        style={{ backgroundColor: currentBackground }}
+      />
+    )
+  }
+
   // Desktop layout with drawer
   return (
-    <div className="relative">
+    <div className="relative h-full">
       {/* Main toolbar */}
-      <MacWindow className="p-2 flex flex-col gap-1 max-h-full overflow-y-auto mac-scrollbar">
-        <div className="flex flex-col gap-1">
+      <MacWindow className="p-2 flex flex-col h-full">
+        <div className="flex flex-col justify-between h-full">
           {tools.map((tool) => (
             <div key={tool.id} className="group relative flex flex-col items-center">
               <ToolIcon
@@ -1156,7 +1186,7 @@ export default function ToolSidebar({
                 active={currentTool === tool.id}
                 title={tool.tooltip}
               >
-                <span className="text-lg">{tool.label}</span>
+                {tool.id === 'background' ? renderBackgroundPreview() : <span className="text-lg">{tool.label}</span>}
               </ToolIcon>
               <span 
                 className="text-[9px] pixel-text mt-0.5 text-center leading-tight"
