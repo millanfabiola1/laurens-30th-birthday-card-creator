@@ -4,7 +4,6 @@ import { useState, useRef, useCallback, useEffect } from "react"
 import TopBar from "@/components/top-bar"
 import ToolSidebar, { FillPattern, WackyEffect } from "@/components/tool-sidebar"
 import CanvasArea, { FabricCanvasRef, BrushShape } from "@/components/canvas-area"
-import BottomBar from "@/components/bottom-bar"
 import MobileToolbar from "@/components/mobile-toolbar"
 import GuidedTour from "@/components/guided-tour"
 import { IText } from "fabric"
@@ -259,7 +258,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col h-dvh mac-desktop overflow-hidden">
-      <TopBar onHelpClick={() => setIsTourOpen(true)} />
+      <TopBar onHelpClick={() => setIsTourOpen(true)} canvasRef={canvasRef} />
       <GuidedTour isOpen={isTourOpen} onClose={() => setIsTourOpen(false)} />
 
       {/* Desktop layout */}
@@ -380,10 +379,6 @@ export default function Home() {
           setCurrentFont={setCurrentFont}
           addSpecialText={addSpecialText}
         />
-      </div>
-
-      <div className="hidden md:block">
-        <BottomBar canvasRef={canvasRef} />
       </div>
     </div>
   )
