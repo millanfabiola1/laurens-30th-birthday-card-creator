@@ -30,6 +30,7 @@ interface CanvasAreaProps {
   setSelectedElementId: (id: string | null) => void
   currentImageStamp: string
   imageStampSize: number
+  onCanvasInteraction?: () => void
 }
 
 export interface FabricCanvasRef {
@@ -64,6 +65,7 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       setSelectedElementId,
       currentImageStamp,
       imageStampSize,
+      onCanvasInteraction,
     },
     ref,
   ) => {
@@ -86,6 +88,11 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
     const rainbowHueRef = useRef(0)
     const currentImageStampRef = useRef(currentImageStamp)
     const imageStampSizeRef = useRef(imageStampSize)
+    const onCanvasInteractionRef = useRef(onCanvasInteraction)
+    
+    useEffect(() => {
+      onCanvasInteractionRef.current = onCanvasInteraction
+    }, [onCanvasInteraction])
     
     // Stamp drawing state (for drawing trails of stamps)
     const isStampDrawingRef = useRef(false)
@@ -357,6 +364,9 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
 
       // Event listeners
       canvas.on('mouse:down', (opt) => {
+        // Notify parent that canvas was interacted with (to close drawer)
+        onCanvasInteractionRef.current?.()
+        
         if (canvas.isDrawingMode) {
           playSound('draw')
           return

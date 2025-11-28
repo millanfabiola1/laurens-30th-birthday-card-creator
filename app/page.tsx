@@ -46,6 +46,7 @@ export default function Home() {
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null)
   const [isTourOpen, setIsTourOpen] = useState<boolean>(false)
   const [currentBackground, setCurrentBackground] = useState<string>("#ffffff")
+  const [shouldCloseDrawer, setShouldCloseDrawer] = useState<boolean>(false)
   const canvasRef = useRef<FabricCanvasRef | null>(null)
   const isRestoringRef = useRef<boolean>(false)
 
@@ -316,6 +317,8 @@ export default function Home() {
           setImageStampSize={setImageStampSize}
           currentBackground={currentBackground}
           onSelectBackground={handleSelectBackground}
+          closeDrawer={shouldCloseDrawer}
+          onDrawerClosed={() => setShouldCloseDrawer(false)}
         />
         <CanvasArea
           ref={canvasRef}
@@ -338,6 +341,7 @@ export default function Home() {
           setSelectedElementId={setSelectedElementId}
           currentImageStamp={currentImageStamp}
           imageStampSize={imageStampSize}
+          onCanvasInteraction={() => setShouldCloseDrawer(true)}
         />
       </div>
 

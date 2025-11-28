@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { playSound } from "@/lib/sound-manager"
 import { MacWindow, MacButton, ToolIcon } from "./mac-ui"
 import type { BrushShape } from "./canvas-area"
@@ -59,6 +59,8 @@ interface ToolSidebarProps {
   setImageStampSize: (size: number) => void
   currentBackground: string
   onSelectBackground: (bg: { value: string; type: 'color' | 'image' | 'gradient' }) => void
+  closeDrawer?: boolean
+  onDrawerClosed?: () => void
 }
 
 // Section header component
@@ -364,8 +366,18 @@ export default function ToolSidebar({
   setImageStampSize,
   currentBackground,
   onSelectBackground,
+  closeDrawer,
+  onDrawerClosed,
 }: ToolSidebarProps) {
   const [activeDrawer, setActiveDrawer] = useState<string | null>(null)
+  
+  // Close drawer when requested from parent (e.g., when clicking on canvas)
+  useEffect(() => {
+    if (closeDrawer && activeDrawer) {
+      setActiveDrawer(null)
+      onDrawerClosed?.()
+    }
+  }, [closeDrawer, activeDrawer, onDrawerClosed])
   const [customTextInput, setCustomTextInput] = useState("")
   const [imageCategory, setImageCategory] = useState<string>("cake-food")
   
@@ -721,7 +733,10 @@ export default function ToolSidebar({
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={handleBackgroundUpload}
+                  onChange={(e) => {
+                    handleBackgroundUpload(e)
+                    setActiveDrawer(null)
+                  }}
                   className="hidden"
                 />
                 <div className="flex items-center justify-center gap-2 p-2 border-2 border-dashed border-pink-300 rounded-lg cursor-pointer hover:bg-pink-50 hover:border-pink-400 transition-all">
@@ -731,18 +746,19 @@ export default function ToolSidebar({
               </label>
             </div>
 
-            {/* Solid Colors */}
+            {/* Image Backgrounds */}
             <div className="mb-3">
-              <SectionHeader gradient="linear-gradient(90deg, #00e5ff 0%, #a855f7 100%)">
-                Solid Colors
+              <SectionHeader gradient="linear-gradient(90deg, #ff1493 0%, #ffd700 100%)">
+                🖼️ Image Backgrounds
               </SectionHeader>
-              <div className="grid grid-cols-4 gap-1">
-                {backgrounds.filter(bg => bg.type === 'color').map((bg) => (
+              <div className="grid grid-cols-3 gap-1 max-h-32 overflow-y-auto mac-scrollbar">
+                {backgrounds.filter(bg => bg.type === 'image').map((bg) => (
                   <button
                     key={bg.id}
                     onClick={() => {
                       onSelectBackground({ value: bg.value, type: bg.type })
                       playSound("click")
+                      setActiveDrawer(null)
                     }}
                     className={`group flex flex-col items-center gap-0.5 p-1 rounded transition-all hover:scale-105 ${
                       currentBackground === bg.value ? 'ring-2 ring-pink-500 bg-pink-100' : 'hover:bg-pink-50'
@@ -750,13 +766,15 @@ export default function ToolSidebar({
                     title={bg.label}
                   >
                     <div 
-                      className="w-7 h-7 border-2 rounded-sm"
+                      className="w-12 h-9 border-2 rounded-sm"
                       style={{ 
-                        backgroundColor: bg.value,
+                        backgroundImage: `url(${bg.value})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
                         borderColor: currentBackground === bg.value ? '#ff1493' : '#ccc',
                       }}
                     />
-                    <span className="text-[8px] pixel-text text-gray-600 leading-tight truncate max-w-[32px]">
+                    <span className="text-[7px] pixel-text text-gray-600 leading-tight truncate max-w-[50px]">
                       {bg.label}
                     </span>
                   </button>
@@ -776,6 +794,7 @@ export default function ToolSidebar({
                     onClick={() => {
                       onSelectBackground({ value: bg.value, type: bg.type })
                       playSound("click")
+                      setActiveDrawer(null)
                     }}
                     className={`group flex flex-col items-center gap-0.5 p-1 rounded transition-all hover:scale-105 ${
                       currentBackground === bg.value ? 'ring-2 ring-pink-500 bg-pink-100' : 'hover:bg-pink-50'
@@ -797,18 +816,19 @@ export default function ToolSidebar({
               </div>
             </div>
 
-            {/* Image Backgrounds */}
+            {/* Solid Colors */}
             <div>
-              <SectionHeader gradient="linear-gradient(90deg, #ff1493 0%, #ffd700 100%)">
-                🖼️ Image Backgrounds
+              <SectionHeader gradient="linear-gradient(90deg, #00e5ff 0%, #a855f7 100%)">
+                Solid Colors
               </SectionHeader>
-              <div className="grid grid-cols-3 gap-1 max-h-40 overflow-y-auto mac-scrollbar">
-                {backgrounds.filter(bg => bg.type === 'image').map((bg) => (
+              <div className="grid grid-cols-4 gap-1">
+                {backgrounds.filter(bg => bg.type === 'color').map((bg) => (
                   <button
                     key={bg.id}
                     onClick={() => {
                       onSelectBackground({ value: bg.value, type: bg.type })
                       playSound("click")
+                      setActiveDrawer(null)
                     }}
                     className={`group flex flex-col items-center gap-0.5 p-1 rounded transition-all hover:scale-105 ${
                       currentBackground === bg.value ? 'ring-2 ring-pink-500 bg-pink-100' : 'hover:bg-pink-50'
@@ -816,15 +836,13 @@ export default function ToolSidebar({
                     title={bg.label}
                   >
                     <div 
-                      className="w-12 h-9 border-2 rounded-sm"
+                      className="w-7 h-7 border-2 rounded-sm"
                       style={{ 
-                        backgroundImage: `url(${bg.value})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
+                        backgroundColor: bg.value,
                         borderColor: currentBackground === bg.value ? '#ff1493' : '#ccc',
                       }}
                     />
-                    <span className="text-[7px] pixel-text text-gray-600 leading-tight truncate max-w-[50px]">
+                    <span className="text-[8px] pixel-text text-gray-600 leading-tight truncate max-w-[32px]">
                       {bg.label}
                     </span>
                   </button>
