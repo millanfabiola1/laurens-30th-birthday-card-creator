@@ -37,6 +37,8 @@ export interface FabricCanvasRef {
   toDataURL: () => string
   clear: () => void
   getObjects: () => FabricObject[]
+  fillCanvas?: (color: string, pattern: string) => void
+  setImageBackground?: (imageUrl: string) => void
 }
 
 const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
@@ -186,6 +188,64 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
           return fabricRef.current.getObjects()
         }
         return []
+      },
+      fillCanvas: (color: string, pattern: string) => {
+        const canvas = fabricRef.current
+        if (!canvas) return
+        
+        // Remove existing background
+        const existingBgRect = canvas.getObjects().find((obj: any) => obj.isBackgroundRect)
+        if (existingBgRect) {
+          canvas.remove(existingBgRect)
+        }
+        
+        // Create background rect with color
+        const bgRect = new Rect({
+          left: 0,
+          top: 0,
+          width: canvas.width || 800,
+          height: canvas.height || 600,
+          fill: color,
+          selectable: false,
+          evented: false,
+        })
+        ;(bgRect as any).isBackgroundRect = true
+        canvas.add(bgRect)
+        canvas.sendObjectToBack(bgRect)
+        canvas.renderAll()
+      },
+      setImageBackground: (imageUrl: string) => {
+        const canvas = fabricRef.current
+        if (!canvas) return
+        
+        FabricImage.fromURL(imageUrl, { crossOrigin: 'anonymous' }).then((img) => {
+          if (!img || !canvas) return
+          
+          // Remove existing background
+          const existingBg = canvas.getObjects().find((obj: any) => obj.isBackgroundRect)
+          if (existingBg) {
+            canvas.remove(existingBg)
+          }
+
+          const canvasWidth = canvas.width || 800
+          const canvasHeight = canvas.height || 600
+          const scaleX = canvasWidth / (img.width || 1)
+          const scaleY = canvasHeight / (img.height || 1)
+          const scale = Math.max(scaleX, scaleY)
+
+          img.set({
+            left: 0,
+            top: 0,
+            scaleX: scale,
+            scaleY: scale,
+            selectable: false,
+            evented: false,
+          })
+          ;(img as any).isBackgroundRect = true
+          canvas.add(img)
+          canvas.sendObjectToBack(img)
+          canvas.renderAll()
+        })
       }
     }), [isReady])
 
@@ -1447,93 +1507,6 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
     return (
       <MacWindow className="flex-1 relative overflow-hidden h-full">
         <div ref={containerRef} className="relative w-full h-full">
-        <div className="absolute top-1 right-1 z-40" ref={backgroundPickerRef}>
-          <button
-            onClick={() => setShowBackgroundPicker(!showBackgroundPicker)}
-            className="flex items-center gap-1.5 text-xs pixel-text cursor-pointer px-2 py-1"
-            style={{
-              ...macStyles.button,
-              background: 'linear-gradient(180deg, #fff 0%, #f0f0f0 100%)',
-            }}
-          >
-            <div 
-              className="w-4 h-4 border border-gray-400 rounded-sm overflow-hidden"
-              style={{ 
-                backgroundColor: currentBg.type === 'color' ? currentBackground : undefined,
-                backgroundImage: currentBg.type === 'image' ? `url(${currentBackground})` : undefined,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-              }}
-            />
-            <span>Background</span>
-            <span className="text-[10px]">{showBackgroundPicker ? '▲' : '▼'}</span>
-          </button>
-
-          {showBackgroundPicker && (
-            <div 
-              className="absolute top-full right-0 mt-1 p-2 border-2 shadow-lg w-[280px] max-h-[400px] overflow-y-auto"
-              style={{
-                background: 'linear-gradient(180deg, #fff 0%, #f8f8f8 100%)',
-                borderColor: '#ff69b4',
-              }}
-            >
-              <div className="text-[10px] font-bold pixel-text mb-2 text-center" style={{ color: '#c71585' }}>
-                🎨 Colors
-              </div>
-              <div className="grid grid-cols-4 gap-1.5 mb-3">
-                {backgrounds.filter(bg => bg.type === 'color').map((bg) => (
-                  <button
-                    key={bg.id}
-                    onClick={() => handleBackgroundSelect(bg)}
-                    className={`group flex flex-col items-center gap-0.5 p-1 rounded transition-all hover:scale-105 ${
-                      currentBackground === bg.value ? 'ring-2 ring-pink-500 bg-pink-100' : 'hover:bg-pink-50'
-                    }`}
-                    title={bg.label}
-                  >
-                    <div 
-                      className="w-7 h-7 border-2 rounded-sm"
-                      style={{ 
-                        backgroundColor: bg.value,
-                        borderColor: currentBackground === bg.value ? '#ff1493' : '#ccc',
-                      }}
-                    />
-                    <span className="text-[8px] pixel-text text-gray-600 leading-tight truncate max-w-[32px]">
-                      {bg.label}
-                    </span>
-                  </button>
-                ))}
-              </div>
-              <div className="text-[10px] font-bold pixel-text mb-2 text-center" style={{ color: '#c71585' }}>
-                🖼️ Images
-              </div>
-              <div className="grid grid-cols-4 gap-1.5">
-                {backgrounds.filter(bg => bg.type === 'image').map((bg) => (
-                  <button
-                    key={bg.id}
-                    onClick={() => handleBackgroundSelect(bg)}
-                    className={`group flex flex-col items-center gap-0.5 p-1 rounded transition-all hover:scale-105 ${
-                      currentBackground === bg.value ? 'ring-2 ring-pink-500 bg-pink-100' : 'hover:bg-pink-50'
-                    }`}
-                    title={bg.label}
-                  >
-                    <div 
-                      className="w-10 h-8 border-2 rounded-sm"
-                      style={{ 
-                        backgroundImage: `url(${bg.value})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                        borderColor: currentBackground === bg.value ? '#ff1493' : '#ccc',
-                      }}
-                    />
-                    <span className="text-[7px] pixel-text text-gray-600 leading-tight truncate max-w-[42px]">
-                      {bg.label}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
         <canvas
           ref={canvasElRef}
           onClick={handleCanvasClick}

@@ -57,6 +57,8 @@ interface ToolSidebarProps {
   setCurrentImageStamp: (stamp: string) => void
   imageStampSize: number
   setImageStampSize: (size: number) => void
+  currentBackground: string
+  onSelectBackground: (bg: { value: string; type: 'color' | 'image' }) => void
 }
 
 // Section header component
@@ -360,6 +362,8 @@ export default function ToolSidebar({
   setCurrentImageStamp,
   imageStampSize,
   setImageStampSize,
+  currentBackground,
+  onSelectBackground,
 }: ToolSidebarProps) {
   const [activeDrawer, setActiveDrawer] = useState<string | null>(null)
   const [customTextInput, setCustomTextInput] = useState("")
@@ -389,12 +393,45 @@ export default function ToolSidebar({
   const tools = [
     { id: "brush", label: "🖌️", tooltip: "Brush", hasDrawer: true },
     { id: "eraser", label: "🧹", tooltip: "Eraser", hasDrawer: true },
+    { id: "background", label: "🎨", tooltip: "Background", hasDrawer: true },
     { id: "fill", label: "🪣", tooltip: "Fill", hasDrawer: true },
     { id: "stamp", label: "⭐", tooltip: "Stamps", hasDrawer: true },
     { id: "text", label: "🔤", tooltip: "Text", hasDrawer: true },
     { id: "images", label: "🖼️", tooltip: "Images", hasDrawer: true },
     { id: "shapes", label: "💜", tooltip: "Shapes", hasDrawer: true },
     { id: "wacky", label: "🌀", tooltip: "Wacky", hasDrawer: true },
+  ]
+
+  // Background options
+  const backgrounds = [
+    // Solid colors
+    { id: 'white', value: '#ffffff', label: 'White', type: 'color' as const },
+    { id: 'cream', value: '#f5f5dc', label: 'Cream', type: 'color' as const },
+    { id: 'lavender', value: '#e6e6fa', label: 'Lavender', type: 'color' as const },
+    { id: 'mint', value: '#f0fff0', label: 'Mint', type: 'color' as const },
+    { id: 'blush', value: '#fff0f5', label: 'Blush', type: 'color' as const },
+    { id: 'peach', value: '#ffecd2', label: 'Peach', type: 'color' as const },
+    { id: 'sky', value: '#e0f7ff', label: 'Sky', type: 'color' as const },
+    { id: 'rose', value: '#ffe4ec', label: 'Rose', type: 'color' as const },
+    // Image backgrounds
+    { id: 'aquarium', value: '/backgrounds/Aquarium.png', label: 'Aquarium', type: 'image' as const },
+    { id: 'barbie', value: '/backgrounds/barbie.png', label: 'Barbie', type: 'image' as const },
+    { id: 'cake-maker', value: '/backgrounds/Cake-Maker.png', label: 'Cake Maker', type: 'image' as const },
+    { id: 'castle', value: '/backgrounds/castle.png', label: 'Castle', type: 'image' as const },
+    { id: 'checkered', value: '/backgrounds/Checkered.png', label: 'Checkered', type: 'image' as const },
+    { id: 'glam', value: '/backgrounds/Glam.png', label: 'Glam', type: 'image' as const },
+    { id: 'living-room', value: '/backgrounds/Living-Room.png', label: 'Living Room', type: 'image' as const },
+    { id: 'party', value: '/backgrounds/Party.png', label: 'Party', type: 'image' as const },
+    { id: 'hello-kitty-story', value: '/backgrounds/PC-_-Computer---Hello-Kitty-Big-Fun-Deluxe---Activities---Big-Fun-Storymaking-(Mode-Select)-1.png', label: 'Hello Kitty', type: 'image' as const },
+    { id: 'hello-kitty-elements', value: '/backgrounds/PC-_-Computer---Hello-Kitty-Big-Fun-Deluxe---Miscellaneous---Shared-Elements-1.png', label: 'HK Elements', type: 'image' as const },
+    { id: 'pick-heart', value: '/backgrounds/Pick-Heart.png', label: 'Pick Heart', type: 'image' as const },
+    { id: 'pink-heart-clouds', value: '/backgrounds/Pink-Heart-Clouds.png', label: 'Heart Clouds', type: 'image' as const },
+    { id: 'purple', value: '/backgrounds/Purple.png', label: 'Purple', type: 'image' as const },
+    { id: 'rainbow-cloud', value: '/backgrounds/Rainbow-Cloud.png', label: 'Rainbow Cloud', type: 'image' as const },
+    { id: 'rainbow', value: '/backgrounds/rainbow.png', label: 'Rainbow', type: 'image' as const },
+    { id: 'rosey-wallpaper', value: '/backgrounds/Rosey-Wallpaper.png', label: 'Rosey', type: 'image' as const },
+    { id: 'salon', value: '/backgrounds/Salon.png', label: 'Salon', type: 'image' as const },
+    { id: 'twilight', value: '/backgrounds/Twilight.png', label: 'Twilight', type: 'image' as const },
   ]
 
   // Image categories with their images
@@ -639,6 +676,79 @@ export default function ToolSidebar({
                   >
                     <span className="text-sm">{shape.icon}</span>
                   </MacButton>
+                ))}
+              </div>
+            </div>
+          </MacWindow>
+        )
+
+      case "background":
+        return (
+          <MacWindow className="p-3 w-64">
+            {/* Solid Colors */}
+            <div className="mb-3">
+              <SectionHeader gradient="linear-gradient(90deg, #00e5ff 0%, #a855f7 100%)">
+                Solid Colors
+              </SectionHeader>
+              <div className="grid grid-cols-4 gap-1">
+                {backgrounds.filter(bg => bg.type === 'color').map((bg) => (
+                  <button
+                    key={bg.id}
+                    onClick={() => {
+                      onSelectBackground({ value: bg.value, type: bg.type })
+                      playSound("click")
+                    }}
+                    className={`group flex flex-col items-center gap-0.5 p-1 rounded transition-all hover:scale-105 ${
+                      currentBackground === bg.value ? 'ring-2 ring-pink-500 bg-pink-100' : 'hover:bg-pink-50'
+                    }`}
+                    title={bg.label}
+                  >
+                    <div 
+                      className="w-7 h-7 border-2 rounded-sm"
+                      style={{ 
+                        backgroundColor: bg.value,
+                        borderColor: currentBackground === bg.value ? '#ff1493' : '#ccc',
+                      }}
+                    />
+                    <span className="text-[8px] pixel-text text-gray-600 leading-tight truncate max-w-[32px]">
+                      {bg.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Image Backgrounds */}
+            <div>
+              <SectionHeader gradient="linear-gradient(90deg, #ff1493 0%, #ffd700 100%)">
+                Image Backgrounds
+              </SectionHeader>
+              <div className="grid grid-cols-3 gap-1 max-h-48 overflow-y-auto mac-scrollbar">
+                {backgrounds.filter(bg => bg.type === 'image').map((bg) => (
+                  <button
+                    key={bg.id}
+                    onClick={() => {
+                      onSelectBackground({ value: bg.value, type: bg.type })
+                      playSound("click")
+                    }}
+                    className={`group flex flex-col items-center gap-0.5 p-1 rounded transition-all hover:scale-105 ${
+                      currentBackground === bg.value ? 'ring-2 ring-pink-500 bg-pink-100' : 'hover:bg-pink-50'
+                    }`}
+                    title={bg.label}
+                  >
+                    <div 
+                      className="w-12 h-9 border-2 rounded-sm"
+                      style={{ 
+                        backgroundImage: `url(${bg.value})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        borderColor: currentBackground === bg.value ? '#ff1493' : '#ccc',
+                      }}
+                    />
+                    <span className="text-[7px] pixel-text text-gray-600 leading-tight truncate max-w-[50px]">
+                      {bg.label}
+                    </span>
+                  </button>
                 ))}
               </div>
             </div>

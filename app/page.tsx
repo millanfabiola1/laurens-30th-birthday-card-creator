@@ -45,6 +45,7 @@ export default function Home() {
   const [historyIndex, setHistoryIndex] = useState<number>(-1)
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null)
   const [isTourOpen, setIsTourOpen] = useState<boolean>(false)
+  const [currentBackground, setCurrentBackground] = useState<string>("#ffffff")
   const canvasRef = useRef<FabricCanvasRef | null>(null)
   const isRestoringRef = useRef<boolean>(false)
 
@@ -256,6 +257,18 @@ export default function Home() {
     [currentColor, currentFont],
   )
 
+  const handleSelectBackground = useCallback((bg: { value: string; type: 'color' | 'image' }) => {
+    setCurrentBackground(bg.value)
+    const canvas = canvasRef.current
+    if (!canvas) return
+    
+    if (bg.type === 'image') {
+      canvas.setImageBackground?.(bg.value)
+    } else {
+      canvas.fillCanvas?.(bg.value, 'solid')
+    }
+  }, [])
+
   return (
     <div className="flex flex-col h-dvh mac-desktop overflow-hidden">
       <TopBar onHelpClick={() => setIsTourOpen(true)} canvasRef={canvasRef} />
@@ -299,6 +312,8 @@ export default function Home() {
           setCurrentImageStamp={setCurrentImageStamp}
           imageStampSize={imageStampSize}
           setImageStampSize={setImageStampSize}
+          currentBackground={currentBackground}
+          onSelectBackground={handleSelectBackground}
         />
         <CanvasArea
           ref={canvasRef}
