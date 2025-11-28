@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { MacWindow, MacButton } from "./mac-ui"
 import { playSound } from "@/lib/sound-manager"
 
@@ -8,100 +8,113 @@ interface TourStep {
   title: string
   description: string
   emoji: string
-  highlight?: string // CSS selector or position hint
-  position: "center" | "top-left" | "top-right" | "bottom-left" | "bottom-right"
+  selector?: string // CSS selector for the element to highlight
+  tooltipPosition: "right" | "left" | "bottom" | "top" | "center"
 }
 
 const tourSteps: TourStep[] = [
   {
-    title: "Welcome to Lauren's Birthday Card Creator! 🎉",
+    title: "Welcome! 🎉",
     description: "Let's take a quick tour to help you create the perfect birthday card for Lauren's 30th!",
     emoji: "👋",
-    position: "center",
+    tooltipPosition: "center",
   },
   {
-    title: "Drawing Tools",
-    description: "Use the Brush 🖌️ to draw freely on the canvas. Pick colors and adjust brush size to create your masterpiece!",
+    title: "Brush Tool",
+    description: "Draw freely on the canvas! Pick colors and adjust brush size to create your masterpiece.",
     emoji: "🖌️",
-    position: "top-left",
+    selector: '[title="Brush"]',
+    tooltipPosition: "right",
   },
   {
     title: "Eraser",
-    description: "Made a mistake? No worries! The Eraser 🧹 lets you remove any strokes you don't want.",
+    description: "Made a mistake? No worries! Remove any strokes you don't want.",
     emoji: "🧹",
-    position: "top-left",
+    selector: '[title="Eraser"]',
+    tooltipPosition: "right",
   },
   {
     title: "Fill Tool",
-    description: "Use the Fill 🪣 tool to quickly fill areas with color. Great for backgrounds!",
+    description: "Quickly fill areas with color. Great for backgrounds!",
     emoji: "🪣",
-    position: "top-left",
+    selector: '[title="Fill"]',
+    tooltipPosition: "right",
   },
   {
     title: "Fun Stamps",
-    description: "Add cute stamps ⭐ to your card! Choose from KidPix-style stamps and click anywhere on the canvas to place them.",
+    description: "Add cute KidPix-style stamps! Click anywhere on the canvas to place them.",
     emoji: "⭐",
-    position: "top-left",
+    selector: '[title="Stamps"]',
+    tooltipPosition: "right",
   },
   {
     title: "Add Text",
-    description: "Write birthday messages with the Text 🔤 tool. Pick fun fonts and colors to make your message pop!",
+    description: "Write birthday messages! Pick fun fonts and colors to make your message pop.",
     emoji: "🔤",
-    position: "top-left",
+    selector: '[title="Text"]',
+    tooltipPosition: "right",
   },
   {
     title: "Images Gallery",
-    description: "The Images 🖼️ tab has characters, cakes, decorations and more! Click to place them on your card and resize as needed.",
+    description: "Characters, cakes, decorations and more! Click to place and resize them.",
     emoji: "🖼️",
-    position: "top-left",
+    selector: '[title="Images"]',
+    tooltipPosition: "right",
   },
   {
     title: "Shapes",
-    description: "Add hearts 💜, stars, and other shapes to decorate your card!",
+    description: "Add hearts, stars, and other shapes to decorate your card!",
     emoji: "💜",
-    position: "top-left",
+    selector: '[title="Shapes"]',
+    tooltipPosition: "right",
   },
   {
     title: "Wacky Effects",
-    description: "The Wacky 🌀 tool adds fun special effects and patterns to your creation!",
+    description: "Fun special effects and patterns for your creation!",
     emoji: "🌀",
-    position: "top-left",
+    selector: '[title="Wacky"]',
+    tooltipPosition: "right",
   },
   {
     title: "Undo & Redo",
-    description: "Use ↩️ Undo and ↪️ Redo to fix any mistakes or bring back something you removed.",
+    description: "Fix mistakes or bring back something you removed.",
     emoji: "↩️",
-    position: "top-left",
+    selector: '[title="Undo"]',
+    tooltipPosition: "right",
   },
   {
     title: "Backgrounds",
-    description: "Click 'Background' to choose from beautiful pre-made backgrounds for your card!",
+    description: "Choose from beautiful pre-made backgrounds for your card!",
     emoji: "🎨",
-    position: "top-right",
+    selector: 'button:has-text("Background")',
+    tooltipPosition: "left",
   },
   {
     title: "Start Fresh",
-    description: "Click '✨ New' to clear the canvas and start a brand new card.",
+    description: "Clear the canvas and start a brand new card.",
     emoji: "✨",
-    position: "bottom-left",
+    selector: 'button:has-text("New")',
+    tooltipPosition: "top",
   },
   {
     title: "Random Design",
-    description: "Feeling creative? Click '🔀 Random Design' to generate a fun random card design instantly!",
+    description: "Generate a fun random card design instantly!",
     emoji: "🔀",
-    position: "bottom-left",
+    selector: 'button:has-text("Random")',
+    tooltipPosition: "top",
   },
   {
     title: "Save Your Card",
-    description: "When you're done, click '💾 Save' to download your creation as an image!",
+    description: "Download your creation as an image when you're done!",
     emoji: "💾",
-    position: "bottom-left",
+    selector: 'button:has-text("Save")',
+    tooltipPosition: "top",
   },
   {
     title: "You're Ready! 🎂",
     description: "That's it! Now go create an amazing birthday card for Lauren. She's going to love it! 💕",
     emoji: "🎉",
-    position: "center",
+    tooltipPosition: "center",
   },
 ]
 
@@ -112,6 +125,98 @@ interface GuidedTourProps {
 
 export default function GuidedTour({ isOpen, onClose }: GuidedTourProps) {
   const [currentStep, setCurrentStep] = useState(0)
+  const [highlightRect, setHighlightRect] = useState<DOMRect | null>(null)
+  const [tooltipStyle, setTooltipStyle] = useState<React.CSSProperties>({})
+  const tooltipRef = useRef<HTMLDivElement>(null)
+
+  const step = tourSteps[currentStep]
+
+  // Find and highlight the target element
+  useEffect(() => {
+    if (!isOpen) return
+
+    const findElement = () => {
+      if (!step.selector) {
+        setHighlightRect(null)
+        // Center tooltip
+        setTooltipStyle({
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+        })
+        return
+      }
+
+      // Try different selector strategies
+      let element: Element | null = null
+      
+      // Handle :has-text pseudo selector (custom)
+      if (step.selector.includes(':has-text')) {
+        const match = step.selector.match(/(.+):has-text\("(.+)"\)/)
+        if (match) {
+          const [, baseSelector, text] = match
+          const elements = document.querySelectorAll(baseSelector)
+          element = Array.from(elements).find(el => el.textContent?.includes(text)) || null
+        }
+      } else {
+        element = document.querySelector(step.selector)
+      }
+
+      if (element) {
+        const rect = element.getBoundingClientRect()
+        setHighlightRect(rect)
+
+        // Calculate tooltip position
+        const padding = 16
+        const tooltipWidth = 320
+        const tooltipHeight = 200 // Approximate
+
+        let style: React.CSSProperties = { position: 'fixed' }
+
+        switch (step.tooltipPosition) {
+          case 'right':
+            style.left = rect.right + padding
+            style.top = rect.top + rect.height / 2
+            style.transform = 'translateY(-50%)'
+            break
+          case 'left':
+            style.right = window.innerWidth - rect.left + padding
+            style.top = rect.top + rect.height / 2
+            style.transform = 'translateY(-50%)'
+            break
+          case 'bottom':
+            style.left = rect.left + rect.width / 2
+            style.top = rect.bottom + padding
+            style.transform = 'translateX(-50%)'
+            break
+          case 'top':
+            style.left = rect.left + rect.width / 2
+            style.bottom = window.innerHeight - rect.top + padding
+            style.transform = 'translateX(-50%)'
+            break
+          default:
+            style.top = '50%'
+            style.left = '50%'
+            style.transform = 'translate(-50%, -50%)'
+        }
+
+        setTooltipStyle(style)
+      } else {
+        setHighlightRect(null)
+        setTooltipStyle({
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+        })
+      }
+    }
+
+    // Small delay to ensure DOM is ready
+    const timer = setTimeout(findElement, 100)
+    return () => clearTimeout(timer)
+  }, [isOpen, currentStep, step.selector, step.tooltipPosition])
 
   const handleNext = useCallback(() => {
     playSound("click")
@@ -156,48 +261,112 @@ export default function GuidedTour({ isOpen, onClose }: GuidedTourProps) {
 
   if (!isOpen) return null
 
-  const step = tourSteps[currentStep]
   const isFirstStep = currentStep === 0
   const isLastStep = currentStep === tourSteps.length - 1
 
-  // Position classes based on step
-  const getPositionClasses = () => {
-    switch (step.position) {
-      case "top-left":
-        return "top-20 left-20"
-      case "top-right":
-        return "top-20 right-20"
-      case "bottom-left":
-        return "bottom-32 left-20"
-      case "bottom-right":
-        return "bottom-32 right-20"
-      default:
-        return "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-    }
-  }
+  // Calculate spotlight cutout
+  const spotlightPadding = 8
 
   return (
     <>
-      {/* Overlay */}
+      {/* Dark overlay with spotlight cutout */}
+      <div className="fixed inset-0 z-[9998] pointer-events-none">
+        <svg className="w-full h-full">
+          <defs>
+            <mask id="spotlight-mask">
+              <rect width="100%" height="100%" fill="white" />
+              {highlightRect && (
+                <rect
+                  x={highlightRect.left - spotlightPadding}
+                  y={highlightRect.top - spotlightPadding}
+                  width={highlightRect.width + spotlightPadding * 2}
+                  height={highlightRect.height + spotlightPadding * 2}
+                  rx="8"
+                  fill="black"
+                />
+              )}
+            </mask>
+          </defs>
+          <rect
+            width="100%"
+            height="100%"
+            fill="rgba(0, 0, 0, 0.7)"
+            mask="url(#spotlight-mask)"
+          />
+        </svg>
+      </div>
+
+      {/* Highlight border around element */}
+      {highlightRect && (
+        <div
+          className="fixed z-[9998] pointer-events-none rounded-lg"
+          style={{
+            left: highlightRect.left - spotlightPadding,
+            top: highlightRect.top - spotlightPadding,
+            width: highlightRect.width + spotlightPadding * 2,
+            height: highlightRect.height + spotlightPadding * 2,
+            border: '3px solid #ff1493',
+            boxShadow: '0 0 20px rgba(255, 20, 147, 0.6), 0 0 40px rgba(255, 20, 147, 0.3)',
+            animation: 'pulse-border 1.5s ease-in-out infinite',
+          }}
+        />
+      )}
+
+      {/* Clickable overlay to close */}
       <div 
-        className="fixed inset-0 bg-black/50 z-[9998] backdrop-blur-sm"
+        className="fixed inset-0 z-[9998]"
         onClick={handleClose}
       />
-      
-      {/* Tour Card */}
-      <div className={`fixed z-[9999] ${getPositionClasses()}`}>
-        <MacWindow className="w-[340px] sm:w-[400px] shadow-2xl animate-bounce-in">
+
+      {/* Arrow pointer */}
+      {highlightRect && step.tooltipPosition !== 'center' && (
+        <div
+          className="fixed z-[10000] pointer-events-none"
+          style={{
+            left: step.tooltipPosition === 'right' 
+              ? highlightRect.right + 4 
+              : step.tooltipPosition === 'left'
+              ? highlightRect.left - 24
+              : highlightRect.left + highlightRect.width / 2 - 10,
+            top: step.tooltipPosition === 'top'
+              ? highlightRect.top - 24
+              : step.tooltipPosition === 'bottom'
+              ? highlightRect.bottom + 4
+              : highlightRect.top + highlightRect.height / 2 - 10,
+          }}
+        >
+          <div 
+            className="text-2xl"
+            style={{
+              transform: step.tooltipPosition === 'right' ? 'rotate(0deg)' 
+                : step.tooltipPosition === 'left' ? 'rotate(180deg)'
+                : step.tooltipPosition === 'top' ? 'rotate(-90deg)'
+                : 'rotate(90deg)',
+            }}
+          >
+            👉
+          </div>
+        </div>
+      )}
+
+      {/* Tour tooltip */}
+      <div 
+        ref={tooltipRef}
+        className="z-[10000] w-[320px]"
+        style={tooltipStyle}
+      >
+        <MacWindow className="shadow-2xl animate-bounce-in">
           {/* Header */}
-          <div className="bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 p-3 flex items-center justify-between">
+          <div className="bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 p-2.5 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-3xl">{step.emoji}</span>
-              <span className="text-white font-bold text-sm pixel-text drop-shadow-md">
-                Step {currentStep + 1} of {tourSteps.length}
+              <span className="text-2xl">{step.emoji}</span>
+              <span className="text-white font-bold text-xs pixel-text drop-shadow-md">
+                {currentStep + 1} / {tourSteps.length}
               </span>
             </div>
             <button 
               onClick={handleClose}
-              className="text-white hover:text-pink-200 text-xl font-bold transition-colors"
+              className="text-white hover:text-pink-200 text-lg font-bold transition-colors leading-none"
               title="Close tour (Esc)"
             >
               ✕
@@ -205,36 +374,28 @@ export default function GuidedTour({ isOpen, onClose }: GuidedTourProps) {
           </div>
 
           {/* Content */}
-          <div className="p-4 bg-gradient-to-b from-pink-50 to-purple-50">
-            <h3 className="text-lg font-bold text-purple-800 mb-2 pixel-text">
+          <div className="p-3 bg-gradient-to-b from-pink-50 to-purple-50">
+            <h3 className="text-base font-bold text-purple-800 mb-1.5 pixel-text">
               {step.title}
             </h3>
-            <p className="text-gray-700 text-sm leading-relaxed mb-4">
+            <p className="text-gray-700 text-sm leading-relaxed mb-3">
               {step.description}
             </p>
 
-            {/* Progress dots */}
-            <div className="flex justify-center gap-1 mb-4">
-              {tourSteps.map((_, index) => (
-                <div
-                  key={index}
-                  className={`w-2 h-2 rounded-full transition-all ${
-                    index === currentStep
-                      ? "bg-pink-500 scale-125"
-                      : index < currentStep
-                      ? "bg-purple-400"
-                      : "bg-gray-300"
-                  }`}
-                />
-              ))}
+            {/* Progress bar */}
+            <div className="h-1.5 bg-gray-200 rounded-full mb-3 overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-pink-500 to-purple-500 transition-all duration-300"
+                style={{ width: `${((currentStep + 1) / tourSteps.length) * 100}%` }}
+              />
             </div>
 
             {/* Navigation buttons */}
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center gap-2">
               <MacButton
                 onClick={handlePrev}
                 disabled={isFirstStep}
-                className={isFirstStep ? "opacity-50 cursor-not-allowed" : ""}
+                className={`text-xs ${isFirstStep ? "opacity-40 cursor-not-allowed" : ""}`}
               >
                 ← Back
               </MacButton>
@@ -243,18 +404,13 @@ export default function GuidedTour({ isOpen, onClose }: GuidedTourProps) {
                 onClick={handleClose}
                 className="text-xs text-gray-500 hover:text-pink-600 underline transition-colors"
               >
-                Skip tour
+                Skip
               </button>
 
-              <MacButton primary onClick={handleNext}>
-                {isLastStep ? "🎉 Done!" : "Next →"}
+              <MacButton primary onClick={handleNext} className="text-xs">
+                {isLastStep ? "Done! 🎉" : "Next →"}
               </MacButton>
             </div>
-          </div>
-
-          {/* Keyboard hint */}
-          <div className="bg-gray-100 px-4 py-2 text-xs text-gray-500 text-center border-t">
-            Use ← → arrow keys to navigate • Esc to exit
           </div>
         </MacWindow>
       </div>
@@ -273,6 +429,14 @@ export default function GuidedTour({ isOpen, onClose }: GuidedTourProps) {
             opacity: 1;
           }
         }
+        @keyframes pulse-border {
+          0%, 100% {
+            box-shadow: 0 0 20px rgba(255, 20, 147, 0.6), 0 0 40px rgba(255, 20, 147, 0.3);
+          }
+          50% {
+            box-shadow: 0 0 30px rgba(255, 20, 147, 0.8), 0 0 60px rgba(255, 20, 147, 0.5);
+          }
+        }
         .animate-bounce-in {
           animation: bounce-in 0.3s ease-out;
         }
@@ -280,4 +444,3 @@ export default function GuidedTour({ isOpen, onClose }: GuidedTourProps) {
     </>
   )
 }
-
