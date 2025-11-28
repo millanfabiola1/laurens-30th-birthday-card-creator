@@ -48,13 +48,13 @@ export default function TopBar({ onHelpClick }: TopBarProps) {
         <span className="cursor-pointer hover:text-primary transition-colors">✂️ Edit</span>
         <span className="cursor-pointer hover:text-primary transition-colors">🎨 Tools</span>
         <span className="cursor-pointer hover:text-primary transition-colors hidden sm:inline">✨ Special</span>
-        <span 
-          className="cursor-pointer hover:text-primary transition-colors hidden sm:inline hover:scale-110 active:scale-95"
+        <button 
+          className="cursor-pointer hover:text-primary transition-colors hidden sm:inline hover:scale-110 active:scale-95 bg-transparent border-none font-bold text-xs"
           onClick={handleHelpClick}
           title="Take a guided tour"
         >
           💕 Help
-        </span>
+        </button>
       </div>
     </MacWindow>
   )
