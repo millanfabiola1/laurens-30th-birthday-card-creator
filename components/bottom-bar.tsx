@@ -391,7 +391,7 @@ export default function BottomBar({ canvasRef }: BottomBarProps) {
   return (
     <MacWindow className="m-2 p-2 flex flex-col sm:flex-row items-center justify-between gap-2">
       <div className="flex gap-2 flex-wrap justify-center">
-        <MacButton onClick={handleNewCard}>New</MacButton>
+        <MacButton onClick={handleNewCard}>✨ New</MacButton>
         <MacButton secondary onClick={handleRandomChaos} disabled={isGenerating}>
           {isGenerating ? "✨ Creating..." : "🔀 Random Design"}
         </MacButton>

@@ -1,8 +1,18 @@
 "use client"
 
 import { MacWindow, macStyles } from "./mac-ui"
+import { playSound } from "@/lib/sound-manager"
 
-export default function TopBar() {
+interface TopBarProps {
+  onHelpClick?: () => void
+}
+
+export default function TopBar({ onHelpClick }: TopBarProps) {
+  const handleHelpClick = () => {
+    playSound("click")
+    onHelpClick?.()
+  }
+
   return (
     <MacWindow className="mx-2 mt-2">
       <div style={macStyles.titleBar}>
@@ -38,7 +48,13 @@ export default function TopBar() {
         <span className="cursor-pointer hover:text-primary transition-colors">✂️ Edit</span>
         <span className="cursor-pointer hover:text-primary transition-colors">🎨 Tools</span>
         <span className="cursor-pointer hover:text-primary transition-colors hidden sm:inline">✨ Special</span>
-        <span className="cursor-pointer hover:text-primary transition-colors hidden sm:inline">💕 Help</span>
+        <span 
+          className="cursor-pointer hover:text-primary transition-colors hidden sm:inline hover:scale-110 active:scale-95"
+          onClick={handleHelpClick}
+          title="Take a guided tour"
+        >
+          💕 Help
+        </span>
       </div>
     </MacWindow>
   )

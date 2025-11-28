@@ -6,6 +6,7 @@ import ToolSidebar, { FillPattern, WackyEffect } from "@/components/tool-sidebar
 import CanvasArea, { FabricCanvasRef, BrushShape } from "@/components/canvas-area"
 import BottomBar from "@/components/bottom-bar"
 import MobileToolbar from "@/components/mobile-toolbar"
+import GuidedTour from "@/components/guided-tour"
 import { IText } from "fabric"
 import { playSound } from "@/lib/sound-manager"
 
@@ -44,6 +45,7 @@ export default function Home() {
   const [history, setHistory] = useState<HistoryState[]>([])
   const [historyIndex, setHistoryIndex] = useState<number>(-1)
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null)
+  const [isTourOpen, setIsTourOpen] = useState<boolean>(false)
   const canvasRef = useRef<FabricCanvasRef | null>(null)
   const isRestoringRef = useRef<boolean>(false)
 
@@ -257,7 +259,8 @@ export default function Home() {
 
   return (
     <div className="flex flex-col h-dvh mac-desktop overflow-hidden">
-      <TopBar />
+      <TopBar onHelpClick={() => setIsTourOpen(true)} />
+      <GuidedTour isOpen={isTourOpen} onClose={() => setIsTourOpen(false)} />
 
       {/* Desktop layout */}
       <div className="hidden md:flex flex-1 gap-2 p-2 overflow-hidden">
