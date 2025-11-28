@@ -880,7 +880,7 @@ export default function ToolSidebar({
 
       case "stamp":
         return (
-          <MacWindow className="p-3 w-52">
+          <MacWindow className="p-3 w-72 max-h-[500px] overflow-y-auto mac-scrollbar">
             {/* Size */}
             <div className="mb-3">
               <SectionHeader gradient="linear-gradient(90deg, #ffd700 0%, #ff6b6b 100%)">
@@ -903,15 +903,35 @@ export default function ToolSidebar({
               </div>
             </div>
 
-            <PaginatedPicker
-              title="Stamps"
-              items={stamps}
-              currentItem={currentStamp}
-              onSelect={setCurrentStamp}
-              itemsPerPage={8}
-              columns={4}
-              gradient="linear-gradient(90deg, #ff1493 0%, #a855f7 100%)"
-            />
+            {/* All Stamps */}
+            <div>
+              <SectionHeader gradient="linear-gradient(90deg, #ff1493 0%, #a855f7 100%)">
+                ⭐ Stamps
+              </SectionHeader>
+              <div className="grid grid-cols-6 gap-1 max-h-64 overflow-y-auto mac-scrollbar">
+                {stamps.map((stamp) => (
+                  <button
+                    key={stamp.id}
+                    onClick={() => {
+                      setCurrentStamp(stamp.id)
+                      playSound("click")
+                      setActiveDrawer(null)
+                    }}
+                    className={`group flex items-center justify-center p-1 rounded transition-all hover:scale-110 ${
+                      currentStamp === stamp.id ? 'ring-2 ring-pink-500 bg-pink-100' : 'hover:bg-pink-50'
+                    }`}
+                    title={`Stamp ${stamp.id}`}
+                  >
+                    <img 
+                      src={stamp.id} 
+                      alt="stamp"
+                      className="w-8 h-8 object-contain"
+                      style={{ imageRendering: 'pixelated' }}
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
           </MacWindow>
         )
 
