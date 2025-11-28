@@ -216,6 +216,8 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
           fill: color,
           selectable: false,
           evented: false,
+          lockMovementX: true,
+          lockMovementY: true,
         })
         ;(bgRect as any).isBackgroundRect = true
         canvas.add(bgRect)
@@ -248,6 +250,8 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
             scaleY: scale,
             selectable: false,
             evented: false,
+            lockMovementX: true,
+            lockMovementY: true,
           })
           ;(img as any).isBackgroundRect = true
           canvas.add(img)
@@ -300,6 +304,8 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
           height: canvasHeight,
           selectable: false,
           evented: false,
+          lockMovementX: true,
+          lockMovementY: true,
         })
 
         // Apply gradient
@@ -1015,7 +1021,11 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
         // Allow selection for move tool and images tool (for selecting/resizing existing elements)
         canvas.selection = true
         canvas.forEachObject((obj) => {
-          if (!(obj as any).isBackgroundRect) {
+          if ((obj as any).isBackgroundRect) {
+            // Background should NEVER be selectable or moveable
+            obj.selectable = false
+            obj.evented = false
+          } else {
             obj.selectable = true
             obj.evented = true
           }
@@ -1028,6 +1038,16 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
           obj.evented = false
         })
       }
+      
+      // Always ensure background is locked (extra safety)
+      canvas.forEachObject((obj) => {
+        if ((obj as any).isBackgroundRect) {
+          obj.selectable = false
+          obj.evented = false
+          obj.lockMovementX = true
+          obj.lockMovementY = true
+        }
+      })
     }, [currentTool, currentColor, brushSize, brushShape, eraserSize, eraserShape, createBrush])
 
     // Handle image upload event
