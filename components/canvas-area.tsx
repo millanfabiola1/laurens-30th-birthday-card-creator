@@ -593,16 +593,10 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
             playSound('wacky')
           }
         } else if (tool === 'images') {
-          // Check if user clicked on an existing object - if so, don't place a new image
-          // The opt.target is automatically set by Fabric.js when clicking on an object
-          const clickedObject = opt.target
-          if (clickedObject && !(clickedObject as any).isBackgroundRect) {
-            // User clicked on an existing object - Fabric.js will handle selection automatically
-            // Just don't place a new image
-            return
-          }
+          // Always place a new image when images tool is active
+          // (use Move tool to select/resize existing images)
           
-          // Add image stamp at click position (only if clicking on empty canvas area)
+          // Add image stamp at click position
           const imageStamp = currentImageStampRef.current
           const size = imageStampSizeRef.current
           
@@ -878,8 +872,8 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       }
 
       // Enable/disable selection based on tool
-      if (currentTool === 'move' || currentTool === 'images') {
-        // Allow selection for move tool and images tool (so users can resize placed images)
+      if (currentTool === 'move') {
+        // Only allow selection for move tool (for selecting/resizing existing elements)
         canvas.selection = true
         canvas.forEachObject((obj) => {
           if (!(obj as any).isBackgroundRect) {
@@ -888,6 +882,7 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
           }
         })
       } else if (currentTool !== 'brush' && currentTool !== 'eraser') {
+        // Disable selection for other tools (including images) so clicks place new elements
         canvas.selection = false
         canvas.forEachObject((obj) => {
           obj.selectable = false
