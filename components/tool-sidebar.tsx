@@ -580,9 +580,13 @@ export default function ToolSidebar({
   const handleToolClick = (toolId: string, hasDrawer?: boolean) => {
     setCurrentTool(toolId)
     playSound("click")
+    
+    // Reset any pending drawer close request from canvas interaction
+    onDrawerClosed?.()
 
     if (hasDrawer) {
-      setActiveDrawer(activeDrawer === toolId ? null : toolId)
+      // Always open the drawer for this tool (don't toggle if clicking same tool)
+      setActiveDrawer(toolId)
     } else {
       setActiveDrawer(null)
       if (isMobile && onClose) {
