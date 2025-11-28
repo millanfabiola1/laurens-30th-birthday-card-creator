@@ -401,7 +401,7 @@ export default function TopBar({ onHelpClick, canvasRef }: TopBarProps) {
         style={{ background: "linear-gradient(90deg, #fff0f7 0%, #e0b0ff 50%, #b0e0ff 100%)" }}
       >
         <div className="flex gap-2 flex-wrap">
-          <MacButton onClick={handleNewCard}>✨ New</MacButton>
+          <MacButton accent onClick={handleNewCard}>✨ New</MacButton>
           <MacButton secondary onClick={handleRandomDesign} disabled={isGenerating}>
             {isGenerating ? "✨ Creating..." : "🔀 Random Design"}
           </MacButton>
