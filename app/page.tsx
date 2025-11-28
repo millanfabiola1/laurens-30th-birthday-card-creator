@@ -257,13 +257,15 @@ export default function Home() {
     [currentColor, currentFont],
   )
 
-  const handleSelectBackground = useCallback((bg: { value: string; type: 'color' | 'image' }) => {
+  const handleSelectBackground = useCallback((bg: { value: string; type: 'color' | 'image' | 'gradient' }) => {
     setCurrentBackground(bg.value)
     const canvas = canvasRef.current
     if (!canvas) return
     
     if (bg.type === 'image') {
       canvas.setImageBackground?.(bg.value)
+    } else if (bg.type === 'gradient') {
+      canvas.setGradientBackground?.(bg.value)
     } else {
       canvas.fillCanvas?.(bg.value, 'solid')
     }

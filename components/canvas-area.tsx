@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useRef, useEffect, forwardRef, useImperativeHandle, useCallback, useState, useMemo } from "react"
-import { Canvas, PencilBrush, CircleBrush, Circle, Rect, Triangle, Polygon, IText, FabricImage, FabricObject, Pattern } from "fabric"
+import { Canvas, PencilBrush, CircleBrush, Circle, Rect, Triangle, Polygon, IText, FabricImage, FabricObject, Pattern, Gradient } from "fabric"
 import { playSound, preloadSounds } from "@/lib/sound-manager"
 import { MacWindow, macStyles } from "./mac-ui"
 import type { CanvasElement } from "@/app/page"
@@ -39,6 +39,7 @@ export interface FabricCanvasRef {
   getObjects: () => FabricObject[]
   fillCanvas?: (color: string, pattern: string) => void
   setImageBackground?: (imageUrl: string) => void
+  setGradientBackground?: (gradientCss: string) => void
 }
 
 const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
@@ -246,6 +247,68 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
           canvas.sendObjectToBack(img)
           canvas.renderAll()
         })
+      },
+      setGradientBackground: (gradientCss: string) => {
+        const canvas = fabricRef.current
+        if (!canvas) return
+        
+        // Remove existing background
+        const existingBgRect = canvas.getObjects().find((obj: any) => obj.isBackgroundRect)
+        if (existingBgRect) {
+          canvas.remove(existingBgRect)
+        }
+
+        // Parse the CSS gradient to extract colors and direction
+        // Format: linear-gradient(135deg, #color1 0%, #color2 50%, #color3 100%)
+        const gradientMatch = gradientCss.match(/linear-gradient\((\d+)deg,\s*(.+)\)/)
+        if (!gradientMatch) return
+
+        const angle = parseInt(gradientMatch[1])
+        const colorStops = gradientMatch[2].split(',').map(stop => {
+          const parts = stop.trim().split(/\s+/)
+          return {
+            color: parts[0],
+            offset: parseInt(parts[1]) / 100
+          }
+        })
+
+        // Convert angle to coordinates
+        const angleRad = (angle - 90) * Math.PI / 180
+        const canvasWidth = canvas.width || 800
+        const canvasHeight = canvas.height || 600
+
+        // Create gradient coordinates based on angle
+        const coords = {
+          x1: canvasWidth / 2 - Math.cos(angleRad) * canvasWidth / 2,
+          y1: canvasHeight / 2 - Math.sin(angleRad) * canvasHeight / 2,
+          x2: canvasWidth / 2 + Math.cos(angleRad) * canvasWidth / 2,
+          y2: canvasHeight / 2 + Math.sin(angleRad) * canvasHeight / 2,
+        }
+
+        // Create background rect with gradient
+        const bgRect = new Rect({
+          left: 0,
+          top: 0,
+          width: canvasWidth,
+          height: canvasHeight,
+          selectable: false,
+          evented: false,
+        })
+
+        // Apply gradient
+        bgRect.set('fill', new Gradient({
+          type: 'linear',
+          coords: coords,
+          colorStops: colorStops.map(stop => ({
+            offset: stop.offset,
+            color: stop.color
+          }))
+        }))
+
+        ;(bgRect as any).isBackgroundRect = true
+        canvas.add(bgRect)
+        canvas.sendObjectToBack(bgRect)
+        canvas.renderAll()
       }
     }), [isReady])
 

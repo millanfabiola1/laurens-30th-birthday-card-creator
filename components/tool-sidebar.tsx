@@ -58,7 +58,7 @@ interface ToolSidebarProps {
   imageStampSize: number
   setImageStampSize: (size: number) => void
   currentBackground: string
-  onSelectBackground: (bg: { value: string; type: 'color' | 'image' }) => void
+  onSelectBackground: (bg: { value: string; type: 'color' | 'image' | 'gradient' }) => void
 }
 
 // Section header component
@@ -404,15 +404,28 @@ export default function ToolSidebar({
 
   // Background options
   const backgrounds = [
-    // Solid colors
+    // Solid colors - more saturated pastels
     { id: 'white', value: '#ffffff', label: 'White', type: 'color' as const },
-    { id: 'cream', value: '#f5f5dc', label: 'Cream', type: 'color' as const },
-    { id: 'lavender', value: '#e6e6fa', label: 'Lavender', type: 'color' as const },
-    { id: 'mint', value: '#f0fff0', label: 'Mint', type: 'color' as const },
-    { id: 'blush', value: '#fff0f5', label: 'Blush', type: 'color' as const },
-    { id: 'peach', value: '#ffecd2', label: 'Peach', type: 'color' as const },
-    { id: 'sky', value: '#e0f7ff', label: 'Sky', type: 'color' as const },
-    { id: 'rose', value: '#ffe4ec', label: 'Rose', type: 'color' as const },
+    { id: 'cream', value: '#fff8dc', label: 'Cream', type: 'color' as const },
+    { id: 'lavender', value: '#d8b4fe', label: 'Lavender', type: 'color' as const },
+    { id: 'mint', value: '#a7f3d0', label: 'Mint', type: 'color' as const },
+    { id: 'blush', value: '#fda4af', label: 'Blush', type: 'color' as const },
+    { id: 'peach', value: '#fed7aa', label: 'Peach', type: 'color' as const },
+    { id: 'sky', value: '#7dd3fc', label: 'Sky', type: 'color' as const },
+    { id: 'rose', value: '#fbb6ce', label: 'Rose', type: 'color' as const },
+    { id: 'coral', value: '#fca5a5', label: 'Coral', type: 'color' as const },
+    { id: 'lilac', value: '#c4b5fd', label: 'Lilac', type: 'color' as const },
+    { id: 'lemon', value: '#fef08a', label: 'Lemon', type: 'color' as const },
+    { id: 'aqua', value: '#67e8f9', label: 'Aqua', type: 'color' as const },
+    // Gradients
+    { id: 'sunset', value: 'linear-gradient(135deg, #fda4af 0%, #fed7aa 50%, #fef08a 100%)', label: 'Sunset', type: 'gradient' as const },
+    { id: 'ocean', value: 'linear-gradient(135deg, #67e8f9 0%, #7dd3fc 50%, #c4b5fd 100%)', label: 'Ocean', type: 'gradient' as const },
+    { id: 'candy', value: 'linear-gradient(135deg, #fbb6ce 0%, #d8b4fe 50%, #7dd3fc 100%)', label: 'Candy', type: 'gradient' as const },
+    { id: 'aurora', value: 'linear-gradient(135deg, #a7f3d0 0%, #67e8f9 50%, #c4b5fd 100%)', label: 'Aurora', type: 'gradient' as const },
+    { id: 'princess', value: 'linear-gradient(180deg, #fbb6ce 0%, #fda4af 50%, #d8b4fe 100%)', label: 'Princess', type: 'gradient' as const },
+    { id: 'dreamy', value: 'linear-gradient(180deg, #c4b5fd 0%, #fbb6ce 100%)', label: 'Dreamy', type: 'gradient' as const },
+    { id: 'tropical', value: 'linear-gradient(135deg, #fef08a 0%, #a7f3d0 50%, #67e8f9 100%)', label: 'Tropical', type: 'gradient' as const },
+    { id: 'bubblegum', value: 'linear-gradient(180deg, #f472b6 0%, #fbb6ce 50%, #fda4af 100%)', label: 'Bubblegum', type: 'gradient' as const },
     // Image backgrounds
     { id: 'aquarium', value: '/backgrounds/Aquarium.png', label: 'Aquarium', type: 'image' as const },
     { id: 'barbie', value: '/backgrounds/barbie.png', label: 'Barbie', type: 'image' as const },
@@ -433,6 +446,20 @@ export default function ToolSidebar({
     { id: 'salon', value: '/backgrounds/Salon.png', label: 'Salon', type: 'image' as const },
     { id: 'twilight', value: '/backgrounds/Twilight.png', label: 'Twilight', type: 'image' as const },
   ]
+
+  // Handle custom background upload
+  const handleBackgroundUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        const dataUrl = event.target?.result as string
+        onSelectBackground({ value: dataUrl, type: 'image' })
+        playSound("click")
+      }
+      reader.readAsDataURL(file)
+    }
+  }
 
   // Image categories with their images
   const imageCategories: { id: string; label: string; images: string[] }[] = [
@@ -684,7 +711,26 @@ export default function ToolSidebar({
 
       case "background":
         return (
-          <MacWindow className="p-3 w-64">
+          <MacWindow className="p-3 w-72 max-h-[500px] overflow-y-auto mac-scrollbar">
+            {/* Upload Your Own */}
+            <div className="mb-3">
+              <SectionHeader gradient="linear-gradient(90deg, #f472b6 0%, #c084fc 100%)">
+                📤 Upload Your Own
+              </SectionHeader>
+              <label className="block">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleBackgroundUpload}
+                  className="hidden"
+                />
+                <div className="flex items-center justify-center gap-2 p-2 border-2 border-dashed border-pink-300 rounded-lg cursor-pointer hover:bg-pink-50 hover:border-pink-400 transition-all">
+                  <span className="text-lg">🖼️</span>
+                  <span className="text-xs pixel-text text-pink-600">Choose Image...</span>
+                </div>
+              </label>
+            </div>
+
             {/* Solid Colors */}
             <div className="mb-3">
               <SectionHeader gradient="linear-gradient(90deg, #00e5ff 0%, #a855f7 100%)">
@@ -718,12 +764,45 @@ export default function ToolSidebar({
               </div>
             </div>
 
+            {/* Gradients */}
+            <div className="mb-3">
+              <SectionHeader gradient="linear-gradient(90deg, #fbb6ce 0%, #c4b5fd 50%, #7dd3fc 100%)">
+                ✨ Gradients
+              </SectionHeader>
+              <div className="grid grid-cols-4 gap-1">
+                {backgrounds.filter(bg => bg.type === 'gradient').map((bg) => (
+                  <button
+                    key={bg.id}
+                    onClick={() => {
+                      onSelectBackground({ value: bg.value, type: bg.type })
+                      playSound("click")
+                    }}
+                    className={`group flex flex-col items-center gap-0.5 p-1 rounded transition-all hover:scale-105 ${
+                      currentBackground === bg.value ? 'ring-2 ring-pink-500 bg-pink-100' : 'hover:bg-pink-50'
+                    }`}
+                    title={bg.label}
+                  >
+                    <div 
+                      className="w-7 h-7 border-2 rounded-sm"
+                      style={{ 
+                        background: bg.value,
+                        borderColor: currentBackground === bg.value ? '#ff1493' : '#ccc',
+                      }}
+                    />
+                    <span className="text-[7px] pixel-text text-gray-600 leading-tight truncate max-w-[32px]">
+                      {bg.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Image Backgrounds */}
             <div>
               <SectionHeader gradient="linear-gradient(90deg, #ff1493 0%, #ffd700 100%)">
-                Image Backgrounds
+                🖼️ Image Backgrounds
               </SectionHeader>
-              <div className="grid grid-cols-3 gap-1 max-h-48 overflow-y-auto mac-scrollbar">
+              <div className="grid grid-cols-3 gap-1 max-h-40 overflow-y-auto mac-scrollbar">
                 {backgrounds.filter(bg => bg.type === 'image').map((bg) => (
                   <button
                     key={bg.id}
@@ -1150,8 +1229,8 @@ export default function ToolSidebar({
       return <span className="text-lg">🎨</span>
     }
     
-    // Check if it's an image (starts with /)
-    if (currentBackground.startsWith('/')) {
+    // Check if it's an image (starts with / or data:)
+    if (currentBackground.startsWith('/') || currentBackground.startsWith('data:')) {
       return (
         <div 
           className="w-8 h-8 rounded border-2 border-white"
@@ -1160,6 +1239,16 @@ export default function ToolSidebar({
             backgroundSize: 'cover',
             backgroundPosition: 'center',
           }}
+        />
+      )
+    }
+    
+    // Check if it's a gradient
+    if (currentBackground.startsWith('linear-gradient')) {
+      return (
+        <div 
+          className="w-8 h-8 rounded border-2 border-white"
+          style={{ background: currentBackground }}
         />
       )
     }
