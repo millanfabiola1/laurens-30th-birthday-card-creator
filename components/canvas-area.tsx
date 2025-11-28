@@ -1105,7 +1105,7 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
           return 'Instrument Serif, serif'
         case 'pixel':
         default:
-          return 'Pixelify Sans, monospace'
+          return 'Doto, sans-serif'
       }
     }
 

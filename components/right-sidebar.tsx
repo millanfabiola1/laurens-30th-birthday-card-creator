@@ -44,7 +44,7 @@ export default function RightSidebar({
   onClose,
 }: RightSidebarProps) {
   const fonts = [
-    { id: "pixel", name: "Pixel", style: 'var(--font-pixel), "Pixelify Sans", monospace' },
+    { id: "pixel", name: "Pixel", style: 'var(--font-pixel), "Doto", sans-serif' },
     { id: "bubble", name: "Bubble", style: 'var(--font-bubble), "Bagel Fat One", cursive' },
     { id: "script", name: "Script", style: 'var(--font-script), "Imperial Script", cursive' },
     { id: "narrow", name: "Narrow", style: 'var(--font-narrow), "Instrument Serif", serif' },

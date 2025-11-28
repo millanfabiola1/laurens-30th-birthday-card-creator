@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Doto:wght@800&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -64,10 +65,10 @@
 
 @theme inline {
   /* Updated font families to use the new Google Fonts */
-  --font-sans: var(--font-pixel), "Pixelify Sans", system-ui, sans-serif;
+  --font-sans: var(--font-pixel), "Doto", system-ui, sans-serif;
   --font-mono: "Monaco", "Courier New", monospace;
   /* Custom font variables for the card creator */
-  --font-pixel: "Pixelify Sans", monospace;
+  --font-pixel: "Doto", sans-serif;
   --font-bubble: "Bagel Fat One", cursive;
   --font-script: "Imperial Script", cursive;
   --font-narrow: "Instrument Serif", serif;

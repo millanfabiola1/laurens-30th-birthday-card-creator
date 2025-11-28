@@ -138,7 +138,7 @@ const birthdayTexts = [
 
 const fonts = [
   "Bagel Fat One, cursive",
-  "Pixelify Sans, monospace",
+  "Doto, sans-serif",
   "Imperial Script, cursive",
 ]
 

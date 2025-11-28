@@ -173,7 +173,7 @@ export default function Home() {
         return 'Instrument Serif, serif'
       case 'pixel':
       default:
-        return 'Pixelify Sans, monospace'
+        return 'Doto, sans-serif'
     }
   }
 
