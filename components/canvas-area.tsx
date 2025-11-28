@@ -937,8 +937,8 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
         }
       }
 
-      window.addEventListener('imageUpload', handleImageUpload as EventListener)
-      return () => window.removeEventListener('imageUpload', handleImageUpload as EventListener)
+      window.addEventListener('imageUpload', handleImageUpload as unknown as EventListener)
+      return () => window.removeEventListener('imageUpload', handleImageUpload as unknown as EventListener)
     }, [])
 
     const getFontFamily = (font: string) => {
@@ -1450,7 +1450,8 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
     const currentBg = backgrounds.find(bg => bg.value === currentBackground) || backgrounds[0]
 
     return (
-      <MacWindow ref={containerRef} className="flex-1 relative overflow-hidden h-full">
+      <MacWindow className="flex-1 relative overflow-hidden h-full">
+        <div ref={containerRef} className="relative w-full h-full">
         <div className="absolute top-1 right-1 z-40" ref={backgroundPickerRef}>
           <button
             onClick={() => setShowBackgroundPicker(!showBackgroundPicker)}
@@ -1555,6 +1556,7 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
                     : 'default'
           }}
         />
+        </div>
       </MacWindow>
     )
   },
