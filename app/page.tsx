@@ -37,6 +37,8 @@ export default function Home() {
   const [currentStamp, setCurrentStamp] = useState<string>("/stamps/kidpix-spritesheet-0-1.png")
   const [stampSize, setStampSize] = useState<number>(48)
   const [currentShape, setCurrentShape] = useState<string>("heart")
+  const [currentImageStamp, setCurrentImageStamp] = useState<string>("/images/cake-food/cake.png")
+  const [imageStampSize, setImageStampSize] = useState<number>(80)
   const [currentPattern, setCurrentPattern] = useState<FillPattern>("solid")
   const [wackyEffect, setWackyEffect] = useState<WackyEffect>("smear")
   const [history, setHistory] = useState<HistoryState[]>([])
@@ -291,6 +293,10 @@ export default function Home() {
           onRedo={handleRedo}
           canUndo={historyIndex > 0}
           canRedo={historyIndex < history.length - 1}
+          currentImageStamp={currentImageStamp}
+          setCurrentImageStamp={setCurrentImageStamp}
+          imageStampSize={imageStampSize}
+          setImageStampSize={setImageStampSize}
         />
         <CanvasArea
           ref={canvasRef}
@@ -311,6 +317,8 @@ export default function Home() {
           saveToHistory={saveToHistory}
           selectedElementId={selectedElementId}
           setSelectedElementId={setSelectedElementId}
+          currentImageStamp={currentImageStamp}
+          imageStampSize={imageStampSize}
         />
       </div>
 
@@ -336,6 +344,8 @@ export default function Home() {
             saveToHistory={saveToHistory}
             selectedElementId={selectedElementId}
             setSelectedElementId={setSelectedElementId}
+            currentImageStamp={currentImageStamp}
+            imageStampSize={imageStampSize}
           />
         </div>
 

@@ -28,6 +28,8 @@ interface CanvasAreaProps {
   saveToHistory: () => void
   selectedElementId: string | null
   setSelectedElementId: (id: string | null) => void
+  currentImageStamp: string
+  imageStampSize: number
 }
 
 export interface FabricCanvasRef {
@@ -57,6 +59,8 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       saveToHistory,
       selectedElementId,
       setSelectedElementId,
+      currentImageStamp,
+      imageStampSize,
     },
     ref,
   ) => {
@@ -77,6 +81,8 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
     const stampSizeRef = useRef(stampSize)
     const wackyEffectRef = useRef(wackyEffect)
     const rainbowHueRef = useRef(0)
+    const currentImageStampRef = useRef(currentImageStamp)
+    const imageStampSizeRef = useRef(imageStampSize)
     
     // Stamp drawing state (for drawing trails of stamps)
     const isStampDrawingRef = useRef(false)
@@ -96,7 +102,9 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       brushSizeRef.current = brushSize
       stampSizeRef.current = stampSize
       wackyEffectRef.current = wackyEffect
-    }, [currentTool, currentColor, currentPattern, currentStamp, currentShape, brushSize, stampSize, wackyEffect])
+      currentImageStampRef.current = currentImageStamp
+      imageStampSizeRef.current = imageStampSize
+    }, [currentTool, currentColor, currentPattern, currentStamp, currentShape, brushSize, stampSize, wackyEffect, currentImageStamp, imageStampSize])
 
     // Generate cursor image for stamp tool
     useEffect(() => {
@@ -143,7 +151,7 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
         if (upperCanvas) {
           upperCanvas.style.cursor = cursorStyle
         }
-      } else if (currentTool === 'stamp') {
+      } else if (currentTool === 'stamp' || currentTool === 'images') {
         canvas.defaultCursor = 'crosshair'
         canvas.hoverCursor = 'crosshair'
       } else if (currentTool === 'brush' || currentTool === 'eraser') {
@@ -584,6 +592,57 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
             saveToHistoryRef.current()
             playSound('wacky')
           }
+        } else if (tool === 'images') {
+          // Check if user clicked on an existing object - if so, don't place a new image
+          // The opt.target is automatically set by Fabric.js when clicking on an object
+          const clickedObject = opt.target
+          if (clickedObject && !(clickedObject as any).isBackgroundRect) {
+            // User clicked on an existing object - Fabric.js will handle selection automatically
+            // Just don't place a new image
+            return
+          }
+          
+          // Add image stamp at click position (only if clicking on empty canvas area)
+          const imageStamp = currentImageStampRef.current
+          const size = imageStampSizeRef.current
+          
+          FabricImage.fromURL(imageStamp, { crossOrigin: 'anonymous' }).then((fabricImg) => {
+            if (!fabricImg || !canvas) return
+            
+            const scale = size / Math.max(fabricImg.width || 100, fabricImg.height || 100)
+            
+            fabricImg.set({
+              left: pointer.x,
+              top: pointer.y,
+              scaleX: scale,
+              scaleY: scale,
+              originX: 'center',
+              originY: 'center',
+              selectable: true,
+              evented: true,
+              hasControls: true,
+              hasBorders: true,
+              cornerColor: '#ff1493',
+              cornerStyle: 'circle',
+              cornerSize: 12,
+              borderColor: '#ff1493',
+              transparentCorners: false,
+              lockUniScaling: false,
+              minScaleLimit: 0.05,
+            })
+            
+            ;(fabricImg as any).customId = `image-stamp-${Date.now()}`
+            ;(fabricImg as any).objectType = 'image-stamp'
+
+            canvas.add(fabricImg)
+            canvas.bringObjectToFront(fabricImg)
+            canvas.setActiveObject(fabricImg)
+            canvas.renderAll()
+            saveToHistoryRef.current()
+            playSound('stamp')
+          }).catch((err) => {
+            console.error('Error loading image stamp:', imageStamp, err)
+          })
         }
       })
 
@@ -819,11 +878,14 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       }
 
       // Enable/disable selection based on tool
-      if (currentTool === 'move') {
+      if (currentTool === 'move' || currentTool === 'images') {
+        // Allow selection for move tool and images tool (so users can resize placed images)
         canvas.selection = true
         canvas.forEachObject((obj) => {
-          obj.selectable = true
-          obj.evented = true
+          if (!(obj as any).isBackgroundRect) {
+            obj.selectable = true
+            obj.evented = true
+          }
         })
       } else if (currentTool !== 'brush' && currentTool !== 'eraser') {
         canvas.selection = false
@@ -1484,7 +1546,7 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
             touchAction: 'none',
             cursor: currentTool === 'stamp' && stampCursorUrl
               ? `url(${stampCursorUrl}) 16 16, crosshair`
-              : currentTool === 'stamp' 
+              : currentTool === 'stamp' || currentTool === 'images'
                 ? 'crosshair' 
                 : currentTool === 'brush' || currentTool === 'eraser'
                   ? 'crosshair'

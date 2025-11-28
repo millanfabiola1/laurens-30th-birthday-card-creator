@@ -53,6 +53,10 @@ interface ToolSidebarProps {
   canRedo: boolean
   isMobile?: boolean
   onClose?: () => void
+  currentImageStamp: string
+  setCurrentImageStamp: (stamp: string) => void
+  imageStampSize: number
+  setImageStampSize: (size: number) => void
 }
 
 // Section header component
@@ -352,9 +356,14 @@ export default function ToolSidebar({
   canRedo,
   isMobile,
   onClose,
+  currentImageStamp,
+  setCurrentImageStamp,
+  imageStampSize,
+  setImageStampSize,
 }: ToolSidebarProps) {
   const [activeDrawer, setActiveDrawer] = useState<string | null>(null)
   const [customTextInput, setCustomTextInput] = useState("")
+  const [imageCategory, setImageCategory] = useState<string>("cake-food")
   
   const patterns: { id: FillPattern; label: string }[] = [
     { id: "solid", label: "Solid" },
@@ -383,10 +392,74 @@ export default function ToolSidebar({
     { id: "fill", label: "🪣", tooltip: "Fill", hasDrawer: true },
     { id: "stamp", label: "⭐", tooltip: "Stamps", hasDrawer: true },
     { id: "text", label: "🔤", tooltip: "Text", hasDrawer: true },
-    { id: "upload", label: "🖼️", tooltip: "Image" },
+    { id: "images", label: "🖼️", tooltip: "Images", hasDrawer: true },
     { id: "shapes", label: "💜", tooltip: "Shapes", hasDrawer: true },
     { id: "wacky", label: "🌀", tooltip: "Wacky", hasDrawer: true },
   ]
+
+  // Image categories with their images
+  const imageCategories: { id: string; label: string; images: string[] }[] = [
+    {
+      id: "cake-food",
+      label: "Cake+Food",
+      images: [
+        "brat-cake.png", "burger.png", "cake.png", "cake01.png", "cake02.png",
+        "candy.png", "chocolate-cake.png", "chocolate-slice.png", "chocolate.png",
+        "cupcake.png", "flan.png", "fries.png", "happymeal.png", "icecream.png",
+        "jelly-cake.png", "lollipop.png", "pancake.png", "pizza.png", "pretzel.png",
+        "red-velvet.png", "slice.png", "soda.png", "sorbet.png"
+      ]
+    },
+    {
+      id: "characters",
+      label: "Characters",
+      images: [
+        "barbie-1.png", "barbie-2.png", "barbie-3.png", "barbie-4.png", "barbie-5.png",
+        "barbie-6.png", "barbie-7.png", "bear.png", "bunny.png", "chester.png",
+        "chloe.png", "donkey.png", "fiona-2.png", "fiona.png", "gary.png",
+        "gingie.png", "grimace.png", "gummybear.png", "hello-kitty.png", "jade.png",
+        "lizzie.png", "mcqueen.png", "my-melody.png", "patrick.png", "pbj-time.png",
+        "pinoccio.png", "puss.png", "ronald.png", "sasha.png", "shortcake-4.png",
+        "shortcake1.png", "shortcake2.png", "shrek-question.png", "shrek.png",
+        "spongebob.png", "strawberry-shortcake.png", "yasmin.png",
+        "Wii---Chuck-E.-Cheese's-Party-Games---Games---Counting-1.png",
+        "Wii---Chuck-E.-Cheese's-Party-Games---Games---Counting-2.png",
+        "Wii---Chuck-E.-Cheese's-Party-Games---Games---Counting-3.png",
+        "Wii---Chuck-E.-Cheese's-Party-Games---Games---Counting-4.png",
+        "Wii---Chuck-E.-Cheese's-Party-Games---Games---Counting-5.png"
+      ]
+    },
+    {
+      id: "decorations",
+      label: "Decorations",
+      images: [
+        "airhorn.png", "balloons-10.png", "balloons-11.png", "balloons-12.png",
+        "balloons-13.png", "balloons-2.png", "balloons-3.png", "balloons-4.png",
+        "balloons-5.png", "balloons-6.png", "balloons-7.png", "balloons-8.png",
+        "balloons-9.png", "balloons.png", "bday-cake.png", "blue-balloon.png",
+        "candle.png", "flower-balloon.png", "party-hat.png", "present.png"
+      ]
+    },
+    {
+      id: "junior",
+      label: "Junior",
+      images: []
+    },
+    {
+      id: "twilight",
+      label: "Twilight",
+      images: [
+        "01-73.png", "02-1.png", "11676fb764d8a176f7b11beea551a840-1.png",
+        "20210730233536696405-cakeify-1.png", "214c9ddd2b5ef07f80b02cba9697de43-1.png",
+        "3485ed3f0a45212e1a0b0d1efd74094f-1.png", "3c2fa95db9a14aaa20e10b9e1a931f3b-1.png",
+        "6918e9a8f58845bfba46684f78f0e1bd-1.png", "Twilight-Logo.png",
+        "a8c4dea2f211254babb1ebad7edbd90d-1.png", "c68145d2793baa2c0c0366607d472d45-1.png",
+        "e7204ac52980c9d84e63b2ac604d3fc4-1.png", "image-1229.png"
+      ]
+    }
+  ]
+
+  const imageStampSizes = [40, 60, 80, 100, 150, 200]
 
   const sizes = [2, 5, 10, 15, 20]
   const stampSizes = [20, 32, 48, 64, 80]
@@ -440,24 +513,24 @@ export default function ToolSidebar({
         onClose()
       }
     }
+  }
 
-    if (toolId === "upload") {
-      const input = document.createElement("input")
-      input.type = "file"
-      input.accept = "image/*"
-      input.onchange = (e) => {
-        const file = (e.target as HTMLInputElement).files?.[0]
-        if (file) {
-          const reader = new FileReader()
-          reader.onload = () => {
-            const event = new CustomEvent("imageUpload", { detail: reader.result })
-            window.dispatchEvent(event)
-          }
-          reader.readAsDataURL(file)
+  const handleUploadImage = () => {
+    const input = document.createElement("input")
+    input.type = "file"
+    input.accept = "image/*"
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0]
+      if (file) {
+        const reader = new FileReader()
+        reader.onload = () => {
+          const event = new CustomEvent("imageUpload", { detail: reader.result })
+          window.dispatchEvent(event)
         }
+        reader.readAsDataURL(file)
       }
-      input.click()
     }
+    input.click()
   }
 
   const handleUndoRedo = (action: "undo" | "redo") => {
@@ -780,6 +853,133 @@ export default function ToolSidebar({
             </div>
             <p className="text-[9px] pixel-text text-gray-500 mt-2 text-center">
               Click & drag on canvas to apply effect!
+            </p>
+          </MacWindow>
+        )
+
+      case "images":
+        const currentCategory = imageCategories.find(c => c.id === imageCategory) || imageCategories[0]
+        return (
+          <MacWindow className="p-3 w-64">
+            {/* Upload your own */}
+            <div className="mb-3">
+              <SectionHeader gradient="linear-gradient(90deg, #ff1493 0%, #a855f7 100%)">
+                📤 Upload Your Own
+              </SectionHeader>
+              <MacButton
+                primary
+                onClick={() => {
+                  handleUploadImage()
+                  playSound("click")
+                }}
+                className="w-full"
+              >
+                Choose Image...
+              </MacButton>
+            </div>
+
+            {/* Image Size */}
+            <div className="mb-3">
+              <SectionHeader gradient="linear-gradient(90deg, #ffd700 0%, #ff6b6b 100%)">
+                📏 Image Size
+              </SectionHeader>
+              <div className="flex gap-1 flex-wrap">
+                {imageStampSizes.map((size) => (
+                  <MacButton
+                    key={size}
+                    onClick={() => {
+                      setImageStampSize(size)
+                      playSound("click")
+                    }}
+                    active={imageStampSize === size}
+                    style={{ width: "40px", padding: "4px", fontSize: "11px" }}
+                  >
+                    {size}
+                  </MacButton>
+                ))}
+              </div>
+            </div>
+
+            {/* Category Tabs */}
+            <div className="mb-2">
+              <SectionHeader gradient="linear-gradient(90deg, #a855f7 0%, #00e5ff 100%)">
+                🗂️ Categories
+              </SectionHeader>
+              <div className="flex flex-wrap gap-1">
+                {imageCategories.map((cat) => (
+                  <MacButton
+                    key={cat.id}
+                    onClick={() => {
+                      setImageCategory(cat.id)
+                      playSound("click")
+                    }}
+                    active={imageCategory === cat.id}
+                    style={{ 
+                      padding: "4px 8px", 
+                      fontSize: "10px",
+                      opacity: cat.images.length === 0 ? 0.5 : 1 
+                    }}
+                    disabled={cat.images.length === 0}
+                  >
+                    {cat.label}
+                  </MacButton>
+                ))}
+              </div>
+            </div>
+
+            {/* Image Grid */}
+            <div className="mb-2">
+              <SectionHeader gradient="linear-gradient(90deg, #00e5ff 0%, #7fff00 100%)">
+                🎨 {currentCategory.label}
+              </SectionHeader>
+              <div className="max-h-48 overflow-y-auto mac-scrollbar">
+                <div className="grid grid-cols-4 gap-1">
+                  {currentCategory.images.map((img) => {
+                    const imagePath = `/images/${imageCategory}/${img}`
+                    return (
+                      <button
+                        key={img}
+                        onClick={() => {
+                          setCurrentImageStamp(imagePath)
+                          setCurrentTool("images")
+                          playSound("click")
+                        }}
+                        className={`p-1 transition-transform hover:scale-110 ${
+                          currentImageStamp === imagePath ? "ring-2 ring-pink-500 scale-110" : ""
+                        }`}
+                        style={{
+                          background: currentImageStamp === imagePath
+                            ? "linear-gradient(180deg, #ffc0e0 0%, #ff69b4 100%)"
+                            : "linear-gradient(180deg, #ffffff 0%, #ffc0e0 100%)",
+                          border: "2px solid #c71585",
+                          borderRadius: "4px",
+                          minHeight: "44px",
+                        }}
+                        title={img.replace(/\.png$/, "").replace(/-/g, " ")}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={imagePath}
+                          alt={img}
+                          width={32}
+                          height={32}
+                          style={{ width: '32px', height: '32px', objectFit: 'contain' }}
+                          draggable={false}
+                        />
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+              {currentCategory.images.length === 0 && (
+                <p className="text-[10px] pixel-text text-gray-500 text-center py-4">
+                  No images in this category yet!
+                </p>
+              )}
+            </div>
+
+            <p className="text-[9px] pixel-text text-gray-500 mt-2 text-center">
+              Click canvas to place • Click placed image to select & resize
             </p>
           </MacWindow>
         )
