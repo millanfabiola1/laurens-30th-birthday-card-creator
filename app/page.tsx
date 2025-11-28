@@ -166,11 +166,13 @@ export default function Home() {
   const getFontFamily = (font: string) => {
     switch (font) {
       case 'bubble':
-        return 'Bagel Fat One, cursive'
+        return 'DynaPuff, cursive'
       case 'script':
         return 'Imperial Script, cursive'
       case 'narrow':
         return 'Instrument Serif, serif'
+      case 'sans-serif':
+        return 'Geist, sans-serif'
       case 'pixel':
       default:
         return 'Doto, sans-serif'
@@ -194,6 +196,7 @@ export default function Home() {
         fontSize: 96, // Very large text
         fontFamily: getFontFamily(currentFont),
         fill: currentColor,
+        charSpacing: -2, // Letter spacing
         originX: 'center',
         originY: 'center',
         selectable: true,
@@ -235,6 +238,7 @@ export default function Home() {
         fontSize: 36,
         fontFamily: getFontFamily(currentFont),
         fill: currentColor,
+        charSpacing: -2, // Letter spacing
         originX: 'center',
         originY: 'center',
         selectable: true,

@@ -547,9 +547,10 @@ export default function ToolSidebar({
 
   const fonts = [
     { id: "pixel", name: "Pixel", style: 'var(--font-pixel), "Doto", sans-serif' },
-    { id: "bubble", name: "Bubble", style: 'var(--font-bubble), "Bagel Fat One", cursive' },
+    { id: "bubble", name: "Bubble", style: 'var(--font-bubble), "DynaPuff", cursive' },
     { id: "script", name: "Script", style: 'var(--font-script), "Imperial Script", cursive' },
     { id: "narrow", name: "Narrow", style: 'var(--font-narrow), "Instrument Serif", serif' },
+    { id: "sans-serif", name: "Sans Serif", style: 'var(--font-sans-serif), "Geist", sans-serif' },
   ]
 
   const laurenSpecials = [
@@ -944,19 +945,19 @@ export default function ToolSidebar({
 
       case "text":
         return (
-          <MacWindow className="p-3 w-56">
+          <MacWindow className="p-3 w-64">
             {/* Custom Text Input */}
             <div className="mb-3">
               <SectionHeader gradient="linear-gradient(90deg, #ff1493 0%, #a855f7 100%)">
                 Type Your Text
               </SectionHeader>
-              <div className="flex gap-1">
+              <div className="flex gap-1 items-center">
                 <input
                   type="text"
                   value={customTextInput}
                   onChange={(e) => setCustomTextInput(e.target.value)}
                   placeholder="Enter text..."
-                  className="flex-1 px-2 py-1 text-sm border-2 border-pink-400 rounded pixel-text"
+                  className="flex-1 min-w-0 px-2 py-1 text-sm border-2 border-pink-400 rounded pixel-text"
                   style={{ 
                     fontFamily: fonts.find(f => f.id === currentFont)?.style,
                     background: 'linear-gradient(180deg, #fff 0%, #ffe4f3 100%)',
@@ -978,7 +979,7 @@ export default function ToolSidebar({
                       playSound("stamp")
                     }
                   }}
-                  style={{ padding: "4px 8px" }}
+                  style={{ padding: "4px 8px", flexShrink: 0 }}
                 >
                   Add
                 </MacButton>

@@ -136,7 +136,7 @@ const birthdayTexts = [
 ]
 
 const fonts = [
-  "Bagel Fat One, cursive",
+  "DynaPuff, cursive",
   "Doto, sans-serif",
   "Imperial Script, cursive",
 ]

@@ -1098,11 +1098,13 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
     const getFontFamily = (font: string) => {
       switch (font) {
         case 'bubble':
-          return 'Bagel Fat One, cursive'
+          return 'DynaPuff, cursive'
         case 'script':
           return 'Imperial Script, cursive'
         case 'narrow':
           return 'Instrument Serif, serif'
+        case 'sans-serif':
+          return 'Geist, sans-serif'
         case 'pixel':
         default:
           return 'Doto, sans-serif'
@@ -1294,6 +1296,7 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
         fontSize: brushSize * 4,
         fontFamily: getFontFamily(currentFont),
         fill: currentColor,
+        charSpacing: -2, // Letter spacing
         originX: 'center',
         originY: 'center',
         selectable: true,
