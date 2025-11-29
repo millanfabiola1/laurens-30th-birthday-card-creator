@@ -239,19 +239,34 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
 
           const canvasWidth = canvas.width || 800
           const canvasHeight = canvas.height || 600
+          
+          // Scale image to cover entire canvas (cover mode)
           const scaleX = canvasWidth / (img.width || 1)
           const scaleY = canvasHeight / (img.height || 1)
           const scale = Math.max(scaleX, scaleY)
+          
+          // Center the image on canvas
+          const scaledWidth = (img.width || 1) * scale
+          const scaledHeight = (img.height || 1) * scale
+          const left = (canvasWidth - scaledWidth) / 2
+          const top = (canvasHeight - scaledHeight) / 2
 
           img.set({
-            left: 0,
-            top: 0,
+            left: left,
+            top: top,
             scaleX: scale,
             scaleY: scale,
             selectable: false,
             evented: false,
             lockMovementX: true,
             lockMovementY: true,
+            lockRotation: true,
+            lockScalingX: true,
+            lockScalingY: true,
+            hasControls: false,
+            hasBorders: false,
+            originX: 'left',
+            originY: 'top',
           })
           ;(img as any).isBackgroundRect = true
           canvas.add(img)
@@ -1576,18 +1591,31 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
         const canvasWidth = canvas.width || 800
         const canvasHeight = canvas.height || 600
         
-        // Scale image to cover the canvas
+        // Scale image to cover entire canvas (cover mode)
         const scaleX = canvasWidth / (img.width || 1)
         const scaleY = canvasHeight / (img.height || 1)
         const scale = Math.max(scaleX, scaleY)
         
+        // Center the image on canvas
+        const scaledWidth = (img.width || 1) * scale
+        const scaledHeight = (img.height || 1) * scale
+        const left = (canvasWidth - scaledWidth) / 2
+        const top = (canvasHeight - scaledHeight) / 2
+        
         img.set({
-          left: 0,
-          top: 0,
+          left: left,
+          top: top,
           scaleX: scale,
           scaleY: scale,
           selectable: false,
           evented: false,
+          lockMovementX: true,
+          lockMovementY: true,
+          lockRotation: true,
+          lockScalingX: true,
+          lockScalingY: true,
+          hasControls: false,
+          hasBorders: false,
           originX: 'left',
           originY: 'top',
         })
