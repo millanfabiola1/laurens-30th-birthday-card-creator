@@ -1110,6 +1110,44 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       return () => window.removeEventListener('imageUpload', handleImageUpload as unknown as EventListener)
     }, [])
 
+    // Handle Delete/Backspace key to remove selected objects
+    useEffect(() => {
+      const handleKeyDown = (e: KeyboardEvent) => {
+        // Only handle Delete/Backspace if not typing in an input
+        if ((e.key === 'Delete' || e.key === 'Backspace') && 
+            document.activeElement?.tagName !== 'INPUT' && 
+            document.activeElement?.tagName !== 'TEXTAREA') {
+          const canvas = fabricRef.current
+          if (!canvas) return
+
+          const activeObject = canvas.getActiveObject()
+          const activeObjects = canvas.getActiveObjects()
+
+          if (activeObject || activeObjects.length > 0) {
+            // Don't delete background objects
+            const objectsToDelete = activeObjects.length > 0 
+              ? activeObjects.filter((obj: any) => !obj.isBackgroundRect)
+              : activeObject && !(activeObject as any).isBackgroundRect 
+                ? [activeObject] 
+                : []
+
+            if (objectsToDelete.length > 0) {
+              objectsToDelete.forEach((obj: any) => {
+                canvas.remove(obj)
+              })
+              canvas.discardActiveObject()
+              canvas.renderAll()
+              saveToHistoryRef.current()
+              playSound('click')
+            }
+          }
+        }
+      }
+
+      window.addEventListener('keydown', handleKeyDown)
+      return () => window.removeEventListener('keydown', handleKeyDown)
+    }, [])
+
     const getFontFamily = (font: string) => {
       switch (font) {
         case 'bubble':
