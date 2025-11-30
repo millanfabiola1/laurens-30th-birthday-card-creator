@@ -119,9 +119,31 @@ export const macStyles = {
     zIndex: 50,
     background: "linear-gradient(180deg, #fff0f7 0%, #ffc0e0 100%)",
     borderTop: "3px solid var(--primary)",
-    boxShadow: "0 -3px 0 0 #c71585",
-    maxHeight: "45vh",
+    boxShadow: "0 -3px 0 0 #c71585, inset -2px -2px 0 0 #ffc0e0, inset 2px 2px 0 0 #ffffff",
+    maxHeight: "65vh",
     overflowY: "auto" as const,
+    WebkitOverflowScrolling: "touch",
+    overscrollBehavior: "contain",
+  } as React.CSSProperties,
+
+  // Touch-optimized tool icon for mobile - matches desktop styling (no rounded corners)
+  toolIconMobile: {
+    width: "48px",
+    height: "48px",
+    minWidth: "44px",
+    minHeight: "44px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "22px",
+    cursor: "pointer",
+    border: "2px solid var(--primary)",
+    background: "linear-gradient(180deg, #ffffff 0%, #ffc0e0 100%)",
+    boxShadow: "inset -2px -2px 0 0 #c71585, inset 2px 2px 0 0 #ffffff, 2px 2px 0 0 #c71585",
+    imageRendering: "pixelated",
+    color: "#4a0033",
+    transition: "transform 0.1s ease-out, box-shadow 0.1s ease-out",
+    WebkitTapHighlightColor: "transparent",
   } as React.CSSProperties,
 }
 
@@ -168,15 +190,21 @@ export function MacWindow({ children, className = "", style = {}, ...props }: Re
 export function ToolIcon({
   children,
   active = false,
+  mobile = false,
   className = "",
   style = {},
   ...props
-}: React.ButtonHTMLAttributes<HTMLButtonElement> & { active?: boolean }) {
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & { 
+  active?: boolean
+  mobile?: boolean 
+}) {
+  const baseStyle = mobile ? macStyles.toolIconMobile : macStyles.toolIcon
+  
   return (
     <button
-      className={`pixel-text ${className}`}
+      className={`pixel-text touch-target ${className}`}
       style={{
-        ...macStyles.toolIcon,
+        ...baseStyle,
         ...(active ? macStyles.toolIconActive : {}),
         ...style,
       }}

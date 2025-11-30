@@ -210,3 +210,363 @@
     background-position: 200% center;
   }
 }
+
+/* ============================================
+   MOBILE & TABLET OPTIMIZATIONS
+   ============================================ */
+
+/* Safe area padding for notched devices (iPhone X+, etc.) */
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-area-left {
+  padding-left: env(safe-area-inset-left, 0px);
+}
+
+.safe-area-right {
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* Improved touch scrolling */
+.touch-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+}
+
+/* Touch feedback for buttons */
+@media (hover: none) and (pointer: coarse) {
+  /* Touch devices */
+  button, [role="button"], .touchable {
+    -webkit-tap-highlight-color: rgba(255, 20, 147, 0.3);
+    touch-action: manipulation;
+  }
+  
+  /* Disable hover effects on touch devices to prevent sticky states */
+  button:hover, [role="button"]:hover {
+    transform: none;
+  }
+  
+  /* Active state for touch - immediate feedback */
+  button:active, [role="button"]:active {
+    transform: scale(0.96);
+    transition: transform 0.08s ease-out;
+  }
+  
+  /* Ensure minimum touch target size (44x44px per Apple HIG) */
+  .touch-target {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* Extra small screens (iPhone SE, small Android phones) */
+@media screen and (max-width: 374px) {
+  .pixel-text {
+    letter-spacing: 0.2px;
+    font-size: 0.875rem;
+  }
+  
+  /* Tighter spacing on very small screens */
+  .mobile-compact {
+    padding: 0.25rem !important;
+    gap: 0.25rem !important;
+  }
+}
+
+/* Small screens (most phones in portrait) */
+@media screen and (max-width: 639px) {
+  /* Optimize font rendering */
+  .pixel-text {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Ensure panels don't overflow */
+  .mobile-panel-content {
+    max-height: 60vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Tablet-specific optimizations (768px - 1023px) */
+@media screen and (min-width: 640px) and (max-width: 1023px) {
+  .pixel-text {
+    letter-spacing: 0.3px;
+  }
+  
+  /* Better use of horizontal space on tablets */
+  .tablet-grid {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  }
+  
+  /* Larger touch targets on tablets since they're used with fingers */
+  .tablet-touch-target {
+    min-width: 48px;
+    min-height: 48px;
+  }
+}
+
+/* Landscape mode optimizations for mobile */
+@media screen and (max-width: 1023px) and (orientation: landscape) {
+  /* Reduce panel height in landscape */
+  .mobile-panel-content {
+    max-height: 50vh;
+  }
+  
+  /* Horizontal layout for toolbar in landscape */
+  .landscape-toolbar {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-around;
+  }
+}
+
+/* Portrait mode optimizations */
+@media screen and (max-width: 767px) and (orientation: portrait) {
+  /* Full height canvas area */
+  .canvas-container {
+    min-height: calc(100dvh - 200px);
+  }
+}
+
+/* Prevent iOS zoom on input focus (must be 16px+) */
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="tel"],
+input[type="url"],
+input[type="search"],
+textarea,
+select {
+  font-size: 16px !important;
+}
+
+/* Smooth panel animations */
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-down {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.25s ease-out forwards;
+}
+
+.animate-slide-down {
+  animation: slide-down 0.2s ease-in forwards;
+}
+
+/* Better focus states for accessibility */
+button:focus-visible,
+[role="button"]:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid #00e5ff;
+  outline-offset: 2px;
+}
+
+/* Smooth transitions for interactive elements */
+button, [role="button"] {
+  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out, background 0.15s ease-out;
+  will-change: transform;
+}
+
+/* Hide scrollbar but keep functionality on mobile */
+@media (max-width: 1023px) {
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Thin scrollbar for panels */
+  .thin-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  .thin-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .thin-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(199, 21, 133, 0.3);
+    border-radius: 2px;
+  }
+}
+
+/* Improved backdrop blur support */
+@supports (backdrop-filter: blur(4px)) {
+  .backdrop-blur-supported {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+}
+
+/* Fallback for devices without backdrop-filter support */
+@supports not (backdrop-filter: blur(4px)) {
+  .backdrop-blur-fallback {
+    background-color: rgba(0, 0, 0, 0.7);
+  }
+}
+
+/* GPU acceleration for smooth animations */
+.gpu-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Prevent text selection on UI elements (but allow on content) */
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Allow text selection on content areas */
+.allow-select {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* Disable pull-to-refresh on the app (prevents accidental refreshes) */
+html, body {
+  overscroll-behavior-y: contain;
+}
+
+/* ============================================
+   RESPONSIVE BREAKPOINT UTILITIES
+   ============================================ */
+
+/* Extra small (xs) - 0px and up */
+@media screen and (min-width: 0px) {
+  .xs\:block { display: block; }
+  .xs\:hidden { display: none; }
+  .xs\:flex { display: flex; }
+}
+
+/* Custom breakpoint between sm and md for better tablet support */
+@media screen and (min-width: 480px) {
+  .xsm\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .xsm\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .xsm\:flex { display: flex; }
+}
+
+/* ============================================
+   TOUCH GESTURE ENHANCEMENTS
+   ============================================ */
+
+/* Swipe indicator animation */
+@keyframes swipe-hint {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateY(-5px);
+    opacity: 1;
+  }
+}
+
+.swipe-hint {
+  animation: swipe-hint 1.5s ease-in-out infinite;
+}
+
+/* Drag handle visual feedback */
+.drag-handle {
+  cursor: grab;
+  transition: background-color 0.2s ease;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+  background-color: rgba(255, 20, 147, 0.3);
+}
+
+/* ============================================
+   LOADING & PERFORMANCE
+   ============================================ */
+
+/* Skeleton loading animation */
+@keyframes skeleton-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.skeleton {
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  background: linear-gradient(90deg, #ffc0e0 25%, #ffb6d9 50%, #ffc0e0 75%);
+  background-size: 200% 100%;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .mac-desktop {
+    animation: none;
+    background-position: 0% 50%;
+  }
+}
+
+/* ============================================
+   DARK MODE SUPPORT FOR MOBILE
+   ============================================ */
+
+@media (prefers-color-scheme: dark) {
+  /* System dark mode preferences - optional future enhancement */
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .mac-desktop {
+    background: white !important;
+  }
+}

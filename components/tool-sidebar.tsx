@@ -61,6 +61,8 @@ interface ToolSidebarProps {
   onSelectBackground: (bg: { value: string; type: 'color' | 'image' | 'gradient' }) => void
   closeDrawer?: boolean
   onDrawerClosed?: () => void
+  onGenerateRandomStamps?: () => void
+  onGenerateRandomImages?: () => void
 }
 
 // Section header component
@@ -368,6 +370,8 @@ export default function ToolSidebar({
   onSelectBackground,
   closeDrawer,
   onDrawerClosed,
+  onGenerateRandomStamps,
+  onGenerateRandomImages,
 }: ToolSidebarProps) {
   const [activeDrawer, setActiveDrawer] = useState<string | null>(null)
   
@@ -934,6 +938,23 @@ export default function ToolSidebar({
               </div>
             </div>
 
+            {/* Random Stamp Generator */}
+            <div className="mb-3">
+              <SectionHeader gradient="linear-gradient(90deg, #a855f7 0%, #ec4899 100%)">
+                🎲 Random Generator
+              </SectionHeader>
+              <MacButton
+                onClick={() => {
+                  onGenerateRandomStamps?.()
+                  playSound("click")
+                  setActiveDrawer(null)
+                }}
+                style={{ width: "100%", padding: "8px", fontSize: "11px" }}
+              >
+                🎲 Add Random Stamps
+              </MacButton>
+            </div>
+
             {/* All Stamps */}
             <div>
               <SectionHeader gradient="linear-gradient(90deg, #ff1493 0%, #a855f7 100%)">
@@ -1156,6 +1177,23 @@ export default function ToolSidebar({
                   </MacButton>
                 ))}
               </div>
+            </div>
+
+            {/* Random Image Generator */}
+            <div className="mb-3">
+              <SectionHeader gradient="linear-gradient(90deg, #ec4899 0%, #a855f7 100%)">
+                🎲 Random Generator
+              </SectionHeader>
+              <MacButton
+                onClick={() => {
+                  onGenerateRandomImages?.()
+                  playSound("click")
+                  setActiveDrawer(null)
+                }}
+                style={{ width: "100%", padding: "8px", fontSize: "11px" }}
+              >
+                🎲 Add Random Images
+              </MacButton>
             </div>
 
             {/* Category Tabs */}

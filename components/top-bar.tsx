@@ -371,23 +371,23 @@ export default function TopBar({ onHelpClick, canvasRef }: TopBarProps) {
   }
 
   return (
-    <MacWindow className="mx-2 mt-2">
+    <MacWindow className="mx-1 sm:mx-2 mt-1 sm:mt-2">
       <div style={macStyles.titleBar}>
-        <div className="flex gap-1">
+        <div className="flex gap-0.5 sm:gap-1">
           <div style={{ ...macStyles.closeButton, backgroundColor: "#ff6b6b" }} title="Close" />
           <div style={{ ...macStyles.closeButton, backgroundColor: "#ffd93d" }} title="Minimize" />
           <div style={{ ...macStyles.closeButton, backgroundColor: "#6bcb77" }} title="Maximize" />
         </div>
-        <div style={macStyles.titleBarStripes} className="hidden sm:block" />
-        <h1 className="text-xs sm:text-sm font-bold text-center flex-1 pixel-text truncate px-2 text-white drop-shadow-[1px_1px_0_#c71585]">
-          ✨ Lauren's 30th Birthday Card Creator ✨
+        <div style={macStyles.titleBarStripes} className="hidden md:block" />
+        <h1 className="text-[10px] sm:text-xs md:text-sm font-bold text-center flex-1 pixel-text truncate px-1 sm:px-2 text-white drop-shadow-[1px_1px_0_#c71585]">
+          ✨ Lauren&apos;s 30th Birthday Card Creator ✨
         </h1>
-        <div style={macStyles.titleBarStripes} className="hidden sm:block" />
+        <div style={macStyles.titleBarStripes} className="hidden md:block" />
         <div
-          className="flex items-center justify-center text-xs font-bold pixel-text"
+          className="flex items-center justify-center text-[10px] sm:text-xs font-bold pixel-text"
           style={{
-            width: "26px",
-            height: "26px",
+            width: "22px",
+            height: "22px",
             border: "2px solid #c71585",
             background: "linear-gradient(180deg, #00e5ff 0%, #0891b2 100%)",
             color: "white",
@@ -398,20 +398,24 @@ export default function TopBar({ onHelpClick, canvasRef }: TopBarProps) {
         </div>
       </div>
       <div
-        className="px-3 py-1.5 text-xs font-bold border-b-2 border-primary flex items-center justify-between gap-2"
+        className="px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-bold border-b-2 border-primary flex items-center justify-between gap-1 sm:gap-2"
         style={{ background: "linear-gradient(90deg, #fff0f7 0%, #e0b0ff 50%, #b0e0ff 100%)" }}
       >
-        <div className="flex gap-2 flex-wrap">
-          <MacButton accent onClick={handleNewCard}><span style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}>✨</span> New</MacButton>
-          <MacButton secondary onClick={handleRandomDesign} disabled={isGenerating}>
-            {isGenerating ? "✨ Creating..." : "🔀 Random Design"}
+        <div className="flex gap-1 sm:gap-2 flex-wrap">
+          <MacButton accent onClick={handleNewCard} style={{ padding: "4px 8px", fontSize: "10px" }} className="sm:!p-[6px_14px] sm:!text-xs">
+            <span style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}>✨</span> New
           </MacButton>
-          <MacButton primary onClick={handleSaveScreenshot} disabled={isExporting}>
-            {isExporting ? "💾 Saving..." : "💾 Save"}
+          <MacButton secondary onClick={handleRandomDesign} disabled={isGenerating} style={{ padding: "4px 8px", fontSize: "10px" }} className="sm:!p-[6px_14px] sm:!text-xs">
+            {isGenerating ? "✨..." : "🔀 Random Design"}
           </MacButton>
-          <MacButton onClick={handleHelpClick}>💕 Help</MacButton>
+          <MacButton primary onClick={handleSaveScreenshot} disabled={isExporting} style={{ padding: "4px 8px", fontSize: "10px" }} className="sm:!p-[6px_14px] sm:!text-xs">
+            {isExporting ? "💾..." : "💾 Save"}
+          </MacButton>
+          <MacButton onClick={handleHelpClick} style={{ padding: "4px 8px", fontSize: "10px" }} className="sm:!p-[6px_14px] sm:!text-xs">💕 Help</MacButton>
         </div>
-        <Countdown targetDate="2025-12-21" timezone="America/Denver" />
+        <div className="hidden sm:block">
+          <Countdown targetDate="2025-12-21" timezone="America/Denver" />
+        </div>
       </div>
     </MacWindow>
   )
