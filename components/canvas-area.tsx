@@ -74,6 +74,7 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
     const fabricRef = useRef<Canvas | null>(null)
     const [isReady, setIsReady] = useState(false)
     const [stampCursorUrl, setStampCursorUrl] = useState<string>('')
+    const [imageCursorUrl, setImageCursorUrl] = useState<string>('')
     const [showStartFreshButton, setShowStartFreshButton] = useState(true)
     
     // Store default stamps for easy removal when background changes
@@ -157,13 +158,53 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       img.src = currentStamp
     }, [currentTool, currentStamp])
 
-    // Update Fabric.js canvas cursor when stamp cursor changes
+    // Generate cursor image for images tool
+    useEffect(() => {
+      if (currentTool !== 'images' || !currentImageStamp) {
+        setImageCursorUrl('')
+        return
+      }
+
+      // Create a small canvas to resize the image for cursor use
+      const cursorSize = 32 // Browser cursor size limit
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        canvas.width = cursorSize
+        canvas.height = cursorSize
+        const ctx = canvas.getContext('2d')
+        if (ctx) {
+          // Draw the image scaled to cursor size
+          ctx.drawImage(img, 0, 0, cursorSize, cursorSize)
+          setImageCursorUrl(canvas.toDataURL('image/png'))
+        }
+      }
+      
+      img.onerror = () => {
+        setImageCursorUrl('')
+      }
+      
+      img.src = currentImageStamp
+    }, [currentTool, currentImageStamp])
+
+    // Update Fabric.js canvas cursor when stamp/image cursor changes
     useEffect(() => {
       const canvas = fabricRef.current
       if (!canvas) return
 
       if (currentTool === 'stamp' && stampCursorUrl) {
         const cursorStyle = `url(${stampCursorUrl}) 16 16, crosshair`
+        canvas.defaultCursor = cursorStyle
+        canvas.hoverCursor = cursorStyle
+        // Also set on the upper canvas element directly
+        const upperCanvas = canvas.upperCanvasEl
+        if (upperCanvas) {
+          upperCanvas.style.cursor = cursorStyle
+        }
+      } else if (currentTool === 'images' && imageCursorUrl) {
+        const cursorStyle = `url(${imageCursorUrl}) 16 16, crosshair`
         canvas.defaultCursor = cursorStyle
         canvas.hoverCursor = cursorStyle
         // Also set on the upper canvas element directly
@@ -184,7 +225,7 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
         canvas.defaultCursor = 'default'
         canvas.hoverCursor = 'move'
       }
-    }, [currentTool, stampCursorUrl, isReady])
+    }, [currentTool, stampCursorUrl, imageCursorUrl, isReady])
 
     // Update selected text color when currentColor changes
     useEffect(() => {
@@ -2124,13 +2165,15 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
             imageRendering: 'auto',
             cursor: currentTool === 'stamp' && stampCursorUrl
               ? `url(${stampCursorUrl}) 16 16, crosshair`
-              : currentTool === 'stamp' || currentTool === 'images'
-                ? 'crosshair' 
-                : currentTool === 'brush' || currentTool === 'eraser'
-                  ? 'crosshair'
-                  : currentTool === 'fill'
+              : currentTool === 'images' && imageCursorUrl
+                ? `url(${imageCursorUrl}) 16 16, crosshair`
+                : currentTool === 'stamp' || currentTool === 'images'
+                  ? 'crosshair' 
+                  : currentTool === 'brush' || currentTool === 'eraser'
                     ? 'crosshair'
-                    : 'default'
+                    : currentTool === 'fill'
+                      ? 'crosshair'
+                      : 'default'
           }}
         />
         
