@@ -31,7 +31,7 @@ const instrumentSerif = Instrument_Serif({
 
 export const metadata: Metadata = {
   title: "Lauren's 30th Birthday Card Creator",
-  description: "Design a custom birthday card in retro 90s/2000s style",
+  description: "Design a custom card for our Birthday Queen Lauren!",
   generator: "v0.app",
   icons: {
     icon: [
@@ -52,7 +52,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Lauren's 30th Birthday Card Creator",
-    description: "Design a custom birthday card in retro 90s/2000s style",
+    description: "Design a custom card for our Birthday Queen Lauren!",
     images: [
       {
         url: "/thumbnail2.png",
@@ -66,7 +66,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Lauren's 30th Birthday Card Creator",
-    description: "Design a custom birthday card in retro 90s/2000s style",
+    description: "Design a custom card for our Birthday Queen Lauren!",
     images: ["/thumbnail2.png"],
   },
 }
