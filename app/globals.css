@@ -461,22 +461,50 @@ button, [role="button"] {
 /* Disable pull-to-refresh on the app (prevents accidental refreshes) */
 html, body {
   overscroll-behavior-y: contain;
+}
+
+/* ============================================
+   CUSTOM PINK CURSOR - FORCE EVERYWHERE
+   ============================================ */
+
+/* Base pink cursor for everything */
+*, *::before, *::after {
   cursor: url('/pink-cursor.png') 0 0, auto !important;
 }
 
-/* Custom pink cursor for all interactive elements */
-a, button, [role="button"], input, select, textarea, label {
-  cursor: url('/pink-cursor.png') 0 0, pointer !important;
-}
-
-/* Ensure canvas uses pink cursor by default */
-canvas {
+/* Fabric.js canvases - target both lower and upper canvas */
+.canvas-container,
+.canvas-container *,
+.canvas-container canvas,
+.upper-canvas,
+.lower-canvas {
   cursor: url('/pink-cursor.png') 0 0, auto !important;
 }
 
-/* Override any other cursor styles */
-* {
-  cursor: inherit;
+/* Tool cursors - only when specific data attributes are set */
+[data-cursor="crosshair"], 
+[data-cursor="crosshair"] *,
+[data-cursor="crosshair"] ~ .upper-canvas {
+  cursor: crosshair !important;
+}
+
+[data-cursor="stamp"],
+[data-cursor="stamp"] *,
+[data-cursor="stamp"] ~ .upper-canvas {
+  cursor: var(--stamp-cursor, crosshair) !important;
+}
+
+[data-cursor="image"],
+[data-cursor="image"] *,
+[data-cursor="image"] ~ .upper-canvas {
+  cursor: var(--image-cursor, crosshair) !important;
+}
+
+/* Pink cursor is the default - no special handling needed */
+[data-cursor="pink"],
+[data-cursor="pink"] *,
+[data-cursor="pink"] ~ .upper-canvas {
+  cursor: url('/pink-cursor.png') 0 0, auto !important;
 }
 
 /* ============================================

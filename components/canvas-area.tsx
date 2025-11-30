@@ -189,57 +189,39 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       img.src = currentImageStamp
     }, [currentTool, currentImageStamp])
 
-    // Pink cursor as default (32x32 with hotspot at top-left)
-    const pinkCursor = "url('/pink-cursor.png') 0 0, auto"
+    // Determine cursor type for data attribute
+    const getCursorType = useCallback(() => {
+      if (currentTool === 'stamp' && stampCursorUrl) return 'stamp'
+      if (currentTool === 'images' && imageCursorUrl) return 'image'
+      if (currentTool === 'stamp' || currentTool === 'images') return 'crosshair'
+      if (currentTool === 'brush' || currentTool === 'eraser') return 'crosshair'
+      if (currentTool === 'fill') return 'crosshair'
+      return 'pink' // default pink cursor
+    }, [currentTool, stampCursorUrl, imageCursorUrl])
+
+    const cursorType = getCursorType()
     
-    // Update Fabric.js canvas cursor when stamp/image cursor changes
+    // Update CSS variable for stamp/image cursor preview
+    useEffect(() => {
+      if (currentTool === 'stamp' && stampCursorUrl) {
+        document.documentElement.style.setProperty('--stamp-cursor', `url(${stampCursorUrl}) 16 16, crosshair`)
+      } else if (currentTool === 'images' && imageCursorUrl) {
+        document.documentElement.style.setProperty('--image-cursor', `url(${imageCursorUrl}) 16 16, crosshair`)
+      }
+    }, [currentTool, stampCursorUrl, imageCursorUrl])
+
+    // Update Fabric.js canvas cursor
     useEffect(() => {
       const canvas = fabricRef.current
       if (!canvas) return
 
-      const upperCanvas = canvas.upperCanvasEl
-      let cursorStyle: string
-
-      if (currentTool === 'stamp' && stampCursorUrl) {
-        cursorStyle = `url(${stampCursorUrl}) 16 16, crosshair`
-      } else if (currentTool === 'images' && imageCursorUrl) {
-        cursorStyle = `url(${imageCursorUrl}) 16 16, crosshair`
-      } else if (currentTool === 'stamp' || currentTool === 'images') {
-        cursorStyle = 'crosshair'
-      } else if (currentTool === 'brush' || currentTool === 'eraser') {
-        cursorStyle = 'crosshair'
-      } else if (currentTool === 'fill') {
-        cursorStyle = 'crosshair'
-      } else {
-        cursorStyle = pinkCursor
-      }
-
-      // Set on Fabric.js canvas
-      canvas.defaultCursor = cursorStyle
-      canvas.hoverCursor = cursorStyle
-      canvas.moveCursor = cursorStyle
-      canvas.rotationCursor = cursorStyle
-      
-      // Also set directly on the upper canvas element
-      if (upperCanvas) {
-        upperCanvas.style.cursor = cursorStyle
-      }
-
-      // Force cursor update on mouse events to prevent Fabric.js from resetting
-      const forceCursor = () => {
-        if (upperCanvas) {
-          upperCanvas.style.cursor = cursorStyle
-        }
-      }
-
-      canvas.on('mouse:move', forceCursor)
-      canvas.on('mouse:over', forceCursor)
-      
-      return () => {
-        canvas.off('mouse:move', forceCursor)
-        canvas.off('mouse:over', forceCursor)
-      }
-    }, [currentTool, stampCursorUrl, imageCursorUrl, isReady])
+      // Disable Fabric.js cursor management entirely
+      canvas.defaultCursor = 'inherit'
+      canvas.hoverCursor = 'inherit'
+      canvas.moveCursor = 'inherit'
+      canvas.rotationCursor = 'inherit'
+      canvas.freeDrawingCursor = 'inherit'
+    }, [isReady])
 
     // Update selected text color when currentColor changes
     useEffect(() => {
@@ -2171,23 +2153,12 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
           ref={canvasElRef}
           onClick={handleCanvasClick}
           className="w-full h-full touch-none"
+          data-cursor={cursorType}
           style={{ 
             touchAction: 'none',
             WebkitUserSelect: 'none',
             userSelect: 'none',
-            // High quality rendering
             imageRendering: 'auto',
-            cursor: currentTool === 'stamp' && stampCursorUrl
-              ? `url(${stampCursorUrl}) 16 16, crosshair`
-              : currentTool === 'images' && imageCursorUrl
-                ? `url(${imageCursorUrl}) 16 16, crosshair`
-                : currentTool === 'stamp' || currentTool === 'images'
-                  ? 'crosshair' 
-                  : currentTool === 'brush' || currentTool === 'eraser'
-                    ? 'crosshair'
-                    : currentTool === 'fill'
-                      ? 'crosshair'
-                      : "url('/pink-cursor.png') 0 0, auto"
           }}
         />
         
