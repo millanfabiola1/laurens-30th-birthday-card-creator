@@ -197,36 +197,47 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       const canvas = fabricRef.current
       if (!canvas) return
 
+      const upperCanvas = canvas.upperCanvasEl
+      let cursorStyle: string
+
       if (currentTool === 'stamp' && stampCursorUrl) {
-        const cursorStyle = `url(${stampCursorUrl}) 16 16, crosshair`
-        canvas.defaultCursor = cursorStyle
-        canvas.hoverCursor = cursorStyle
-        // Also set on the upper canvas element directly
-        const upperCanvas = canvas.upperCanvasEl
-        if (upperCanvas) {
-          upperCanvas.style.cursor = cursorStyle
-        }
+        cursorStyle = `url(${stampCursorUrl}) 16 16, crosshair`
       } else if (currentTool === 'images' && imageCursorUrl) {
-        const cursorStyle = `url(${imageCursorUrl}) 16 16, crosshair`
-        canvas.defaultCursor = cursorStyle
-        canvas.hoverCursor = cursorStyle
-        // Also set on the upper canvas element directly
-        const upperCanvas = canvas.upperCanvasEl
+        cursorStyle = `url(${imageCursorUrl}) 16 16, crosshair`
+      } else if (currentTool === 'stamp' || currentTool === 'images') {
+        cursorStyle = 'crosshair'
+      } else if (currentTool === 'brush' || currentTool === 'eraser') {
+        cursorStyle = 'crosshair'
+      } else if (currentTool === 'fill') {
+        cursorStyle = 'crosshair'
+      } else {
+        cursorStyle = pinkCursor
+      }
+
+      // Set on Fabric.js canvas
+      canvas.defaultCursor = cursorStyle
+      canvas.hoverCursor = cursorStyle
+      canvas.moveCursor = cursorStyle
+      canvas.rotationCursor = cursorStyle
+      
+      // Also set directly on the upper canvas element
+      if (upperCanvas) {
+        upperCanvas.style.cursor = cursorStyle
+      }
+
+      // Force cursor update on mouse events to prevent Fabric.js from resetting
+      const forceCursor = () => {
         if (upperCanvas) {
           upperCanvas.style.cursor = cursorStyle
         }
-      } else if (currentTool === 'stamp' || currentTool === 'images') {
-        canvas.defaultCursor = 'crosshair'
-        canvas.hoverCursor = 'crosshair'
-      } else if (currentTool === 'brush' || currentTool === 'eraser') {
-        canvas.defaultCursor = 'crosshair'
-        canvas.hoverCursor = 'crosshair'
-      } else if (currentTool === 'fill') {
-        canvas.defaultCursor = 'crosshair'
-        canvas.hoverCursor = 'crosshair'
-      } else {
-        canvas.defaultCursor = pinkCursor
-        canvas.hoverCursor = pinkCursor
+      }
+
+      canvas.on('mouse:move', forceCursor)
+      canvas.on('mouse:over', forceCursor)
+      
+      return () => {
+        canvas.off('mouse:move', forceCursor)
+        canvas.off('mouse:over', forceCursor)
       }
     }, [currentTool, stampCursorUrl, imageCursorUrl, isReady])
 

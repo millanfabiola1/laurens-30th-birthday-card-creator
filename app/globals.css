@@ -461,17 +461,22 @@ button, [role="button"] {
 /* Disable pull-to-refresh on the app (prevents accidental refreshes) */
 html, body {
   overscroll-behavior-y: contain;
-  cursor: url('/pink-cursor.png') 0 0, auto;
+  cursor: url('/pink-cursor.png') 0 0, auto !important;
 }
 
 /* Custom pink cursor for all interactive elements */
 a, button, [role="button"], input, select, textarea, label {
-  cursor: url('/pink-cursor.png') 0 0, pointer;
+  cursor: url('/pink-cursor.png') 0 0, pointer !important;
 }
 
 /* Ensure canvas uses pink cursor by default */
 canvas {
-  cursor: url('/pink-cursor.png') 0 0, auto;
+  cursor: url('/pink-cursor.png') 0 0, auto !important;
+}
+
+/* Override any other cursor styles */
+* {
+  cursor: inherit;
 }
 
 /* ============================================
