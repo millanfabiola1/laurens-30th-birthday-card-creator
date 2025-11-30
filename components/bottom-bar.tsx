@@ -350,6 +350,7 @@ export default function BottomBar({ canvasRef }: BottomBarProps) {
         fontSize: 72,
         fontFamily: font,
         fill: textColor,
+        textAlign: 'center',
         originX: 'center',
         originY: 'center',
         selectable: true,

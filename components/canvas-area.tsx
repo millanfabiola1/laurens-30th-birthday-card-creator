@@ -176,6 +176,23 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       }
     }, [currentTool, stampCursorUrl, isReady])
 
+    // Update selected text color when currentColor changes
+    useEffect(() => {
+      const canvas = fabricRef.current
+      if (!canvas || !isReady) return
+
+      // Only update if we're working with text (text tool active or text object selected)
+      const activeObject = canvas.getActiveObject()
+      if (activeObject && (activeObject as any).objectType === 'text' && activeObject.type === 'i-text') {
+        const textObject = activeObject as IText
+        if (textObject.fill !== currentColor) {
+          textObject.set('fill', currentColor)
+          canvas.renderAll()
+          saveToHistoryRef.current()
+        }
+      }
+    }, [currentColor, isReady])
+
     useImperativeHandle(ref, () => ({
       canvas: fabricRef.current,
       toDataURL: () => {
@@ -186,6 +203,11 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       },
       clear: () => {
         if (fabricRef.current) {
+          // Remove all objects including default stamps and backgrounds
+          const allObjects = fabricRef.current.getObjects()
+          allObjects.forEach((obj: any) => {
+            fabricRef.current!.remove(obj)
+          })
           fabricRef.current.clear()
           fabricRef.current.backgroundColor = '#ffffff'
           fabricRef.current.renderAll()
@@ -278,10 +300,54 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
         const canvas = fabricRef.current
         if (!canvas) return
         
-        // Remove existing background
-        const existingBgRect = canvas.getObjects().find((obj: any) => obj.isBackgroundRect)
-        if (existingBgRect) {
-          canvas.remove(existingBgRect)
+        // Get all objects first before removing any
+        const allObjects = canvas.getObjects()
+        
+        // Remove ALL existing background objects (images, patterns, other gradients)
+        const backgroundObjects = allObjects.filter((obj: any) => obj.isBackgroundRect)
+        backgroundObjects.forEach((obj: any) => {
+          canvas.remove(obj)
+        })
+        
+        // Remove default stamps and eraser strokes when selecting a new background
+        const defaultStamps: any[] = []
+        const eraserStrokes: any[] = []
+        
+        for (const obj of allObjects) {
+          // Skip if it's a background object (handled above)
+          if ((obj as any).isBackgroundRect) continue
+          
+          // Check if it's an eraser stroke (path objects marked as eraser)
+          if (obj.type === 'path' && (obj as any).isEraserStroke === true) {
+            eraserStrokes.push(obj)
+            continue
+          }
+          
+          const customId = String((obj as any).customId || '')
+          const isDefaultFlag = (obj as any).isDefaultStamp === true
+          const parts = customId.split('-')
+          const isDefaultPattern = parts.length === 3 && parts[0] === 'stamp' && 
+                                  !isNaN(Number(parts[1])) && !isNaN(Number(parts[2]))
+          const isImageStamp = obj.type === 'image' && (obj as any).objectType === 'stamp'
+          
+          if (isDefaultFlag || (isDefaultPattern && isImageStamp)) {
+            defaultStamps.push(obj)
+          }
+        }
+        
+        // Remove all eraser strokes (these hide the background)
+        for (const stroke of eraserStrokes) {
+          canvas.remove(stroke)
+        }
+        
+        // Remove all default stamps
+        for (const stamp of defaultStamps) {
+          canvas.remove(stamp)
+        }
+        
+        // Render immediately to show stamps and eraser strokes removed
+        if (defaultStamps.length > 0 || eraserStrokes.length > 0) {
+          canvas.renderAll()
         }
 
         // Parse the CSS gradient to extract colors and direction
@@ -959,13 +1025,21 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       })
 
       // Use ref to always call latest saveToHistory
-      canvas.on('path:created', () => {
+      canvas.on('path:created', (e) => {
+        // Mark eraser strokes so we can remove them when backgrounds change
+        if (currentToolRef.current === 'eraser' && e.path) {
+          ;(e.path as any).isEraserStroke = true
+        }
         saveToHistoryRef.current()
       })
 
       canvas.on('object:added', (e) => {
         // Don't double-save for paths (handled by path:created)
         if (e.target?.type === 'path') return
+        // Don't save history for default stamps (they're added automatically)
+        if ((e.target as any)?.isDefaultStamp) {
+          return
+        }
         saveToHistoryRef.current()
       })
 
@@ -991,6 +1065,141 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
         setIsReady(false)
       }
     }, [])
+
+    // Set default background image and stamps on each visit (if canvas is empty)
+    useEffect(() => {
+      if (!isReady) return
+
+      // Add a small delay to ensure canvas is fully initialized
+      const timer = setTimeout(() => {
+        const canvas = fabricRef.current
+        if (!canvas) return
+        
+        const objects = canvas.getObjects()
+        
+        // Check if default background already exists
+        const hasDefaultBg = objects.some((obj: any) => (obj as any).isDefaultBackground)
+        if (hasDefaultBg) return
+
+        // Only load default if canvas is completely empty
+        if (objects.length === 0) {
+          // Set default background image
+          const defaultBgImage = '/backgrounds/lauren-default.png'
+          FabricImage.fromURL(defaultBgImage, { crossOrigin: 'anonymous' }).then((img) => {
+          if (!img || !canvas) return
+          
+          const canvasWidth = canvas.width || 800
+          const canvasHeight = canvas.height || 600
+          
+          // Scale image to cover entire canvas (cover mode)
+          const scaleX = canvasWidth / (img.width || 1)
+          const scaleY = canvasHeight / (img.height || 1)
+          const scale = Math.max(scaleX, scaleY)
+          
+          // Center the image on canvas
+          const scaledWidth = (img.width || 1) * scale
+          const scaledHeight = (img.height || 1) * scale
+          const left = (canvasWidth - scaledWidth) / 2
+          const top = (canvasHeight - scaledHeight) / 2
+          
+          img.set({
+            left: left,
+            top: top,
+            scaleX: scale,
+            scaleY: scale,
+            selectable: false,
+            evented: false,
+            lockMovementX: true,
+            lockMovementY: true,
+            lockRotation: true,
+            lockScalingX: true,
+            lockScalingY: true,
+            hasControls: false,
+            hasBorders: false,
+            originX: 'left',
+            originY: 'top',
+          })
+          
+          ;(img as any).isBackgroundRect = true
+          ;(img as any).isDefaultBackground = true // Mark as default background
+          
+          canvas.backgroundColor = '#ffffff'
+          canvas.add(img)
+          canvas.sendObjectToBack(img)
+          
+          // Add 40-70 randomly scattered stamps over the background
+          const numStamps = Math.floor(Math.random() * 31) + 40 // Random between 40-70
+          
+          // Generate list of available kidpix stamps (1-18, 21-109)
+          const availableStamps: number[] = [
+            ...Array.from({ length: 18 }, (_, i) => i + 1),
+            ...Array.from({ length: 89 }, (_, i) => i + 21),
+          ]
+          
+          // Randomly shuffle and select stamps
+          const shuffledStamps = availableStamps.sort(() => Math.random() - 0.5)
+          const selectedStamps = shuffledStamps.slice(0, numStamps)
+          
+          // Add stamps with some delay to avoid overwhelming the browser
+          selectedStamps.forEach((stampNum, index) => {
+            setTimeout(() => {
+              const stampPath = `/stamps/kidpix-spritesheet-0-${stampNum}.png`
+              const stampSize = 48 // Fixed size for first-time visitor stamps
+              
+              // Random position on canvas (with some padding from edges)
+              const padding = 50
+              const x = Math.random() * (canvasWidth - padding * 2) + padding
+              const y = Math.random() * (canvasHeight - padding * 2) + padding
+              
+              FabricImage.fromURL(stampPath, { crossOrigin: 'anonymous' }).then((stampImg) => {
+                if (!stampImg || !canvas) return
+                
+                const scale = stampSize / Math.max(stampImg.width || 50, stampImg.height || 50)
+                const rotation = (Math.random() - 0.5) * 30 // Random rotation between -15 and +15 degrees
+                
+                stampImg.set({
+                  left: x,
+                  top: y,
+                  scaleX: scale,
+                  scaleY: scale,
+                  angle: rotation,
+                  originX: 'center',
+                  originY: 'center',
+                  selectable: true,
+                  evented: true,
+                  hasControls: true,
+                  hasBorders: true,
+                  cornerColor: '#ff1493',
+                  cornerStyle: 'circle',
+                  cornerSize: 12,
+                  borderColor: '#ff1493',
+                  transparentCorners: false,
+                  lockUniScaling: false,
+                  minScaleLimit: 0.1,
+                })
+                
+                // Set custom properties directly (Fabric.js requirement for custom properties)
+                ;(stampImg as any).customId = `stamp-${Date.now()}-${index}`
+                ;(stampImg as any).objectType = 'stamp'
+                ;(stampImg as any).isDefaultStamp = true // Mark as default stamp
+                
+                canvas.add(stampImg)
+                canvas.renderAll()
+              }).catch((err) => {
+                console.error('Error loading stamp image:', stampPath, err)
+              })
+            }, index * 10) // Small delay between each stamp to prevent blocking
+          })
+          
+          canvas.renderAll()
+        }).catch((err) => {
+          console.error('Error loading default background image:', err)
+        })
+        }
+      }, 200) // Small delay to ensure canvas is ready
+      
+      return () => clearTimeout(timer)
+    }, [isReady])
 
     // Create brush based on shape
     const createBrush = useCallback((canvas: Canvas, shape: BrushShape, color: string, size: number) => {
@@ -1349,7 +1558,8 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
         fontSize: brushSize * 4,
         fontFamily: getFontFamily(currentFont),
         fill: currentColor,
-        charSpacing: -2, // Letter spacing
+        charSpacing: currentFont === 'pixel' ? 0 : -2, // No spacing for pixel font, -2 for others
+        textAlign: 'center',
         originX: 'center',
         originY: 'center',
         selectable: true,
@@ -1487,10 +1697,54 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       const canvas = fabricRef.current
       if (!canvas) return
 
-      // Remove any existing background rect
-      const existingBgRect = canvas.getObjects().find((obj: any) => obj.isBackgroundRect)
-      if (existingBgRect) {
-        canvas.remove(existingBgRect)
+      // Get all objects first before removing any
+      const allObjects = canvas.getObjects()
+
+      // Remove ALL existing background objects (images, gradients, patterns)
+      const backgroundObjects = allObjects.filter((obj: any) => obj.isBackgroundRect)
+      backgroundObjects.forEach((obj: any) => {
+        canvas.remove(obj)
+      })
+      
+      // Remove default stamps and eraser strokes when selecting a new background
+      const defaultStamps: any[] = []
+      const eraserStrokes: any[] = []
+      
+      for (const obj of allObjects) {
+        // Skip if it's a background object (handled above)
+        if ((obj as any).isBackgroundRect) continue
+        
+        // Check if it's an eraser stroke (path objects marked as eraser)
+        if (obj.type === 'path' && (obj as any).isEraserStroke === true) {
+          eraserStrokes.push(obj)
+          continue
+        }
+        
+        const customId = String((obj as any).customId || '')
+        const isDefaultFlag = (obj as any).isDefaultStamp === true
+        const parts = customId.split('-')
+        const isDefaultPattern = parts.length === 3 && parts[0] === 'stamp' && 
+                                !isNaN(Number(parts[1])) && !isNaN(Number(parts[2]))
+        const isImageStamp = obj.type === 'image' && (obj as any).objectType === 'stamp'
+        
+        if (isDefaultFlag || (isDefaultPattern && isImageStamp)) {
+          defaultStamps.push(obj)
+        }
+      }
+      
+      // Remove all eraser strokes (these hide the background)
+      for (const stroke of eraserStrokes) {
+        canvas.remove(stroke)
+      }
+      
+      // Remove all default stamps
+      for (const stamp of defaultStamps) {
+        canvas.remove(stamp)
+      }
+      
+      // Render immediately to show stamps and eraser strokes removed
+      if (defaultStamps.length > 0 || eraserStrokes.length > 0) {
+        canvas.renderAll()
       }
 
       if (patternType === 'solid') {
@@ -1570,24 +1824,24 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       { id: 'sky', value: '#e0f7ff', label: 'Sky', type: 'color' as const },
       { id: 'rose', value: '#ffe4ec', label: 'Rose', type: 'color' as const },
       // Image backgrounds
+      { id: 'party', value: '/backgrounds/Party.png', label: 'Party', type: 'image' as const },
+      { id: 'rainbow', value: '/backgrounds/rainbow.png', label: 'Rainbow', type: 'image' as const },
+      { id: 'salon', value: '/backgrounds/Salon.png', label: 'Salon', type: 'image' as const },
+      { id: 'twilight', value: '/backgrounds/Twilight.png', label: 'Twilight', type: 'image' as const },
       { id: 'aquarium', value: '/backgrounds/Aquarium.png', label: 'Aquarium', type: 'image' as const },
-      { id: 'barbie', value: '/backgrounds/barbie.png', label: 'Barbie', type: 'image' as const },
-      { id: 'cake-maker', value: '/backgrounds/Cake-Maker.png', label: 'Cake Maker', type: 'image' as const },
       { id: 'castle', value: '/backgrounds/castle.png', label: 'Castle', type: 'image' as const },
+      { id: 'living-room', value: '/backgrounds/Living-Room.png', label: 'Living Room', type: 'image' as const },
+      { id: 'cake-maker', value: '/backgrounds/Cake-Maker.png', label: 'Cake Maker', type: 'image' as const },
+      { id: 'barbie', value: '/backgrounds/barbie.png', label: 'Barbie', type: 'image' as const },
       { id: 'checkered', value: '/backgrounds/Checkered.png', label: 'Checkered', type: 'image' as const },
       { id: 'glam', value: '/backgrounds/Glam.png', label: 'Glam', type: 'image' as const },
-      { id: 'living-room', value: '/backgrounds/Living-Room.png', label: 'Living Room', type: 'image' as const },
-      { id: 'party', value: '/backgrounds/Party.png', label: 'Party', type: 'image' as const },
       { id: 'hello-kitty-story', value: '/backgrounds/PC-_-Computer---Hello-Kitty-Big-Fun-Deluxe---Activities---Big-Fun-Storymaking-(Mode-Select)-1.png', label: 'Hello Kitty', type: 'image' as const },
       { id: 'hello-kitty-elements', value: '/backgrounds/PC-_-Computer---Hello-Kitty-Big-Fun-Deluxe---Miscellaneous---Shared-Elements-1.png', label: 'HK Elements', type: 'image' as const },
       { id: 'pick-heart', value: '/backgrounds/Pick-Heart.png', label: 'Pick Heart', type: 'image' as const },
       { id: 'pink-heart-clouds', value: '/backgrounds/Pink-Heart-Clouds.png', label: 'Heart Clouds', type: 'image' as const },
       { id: 'purple', value: '/backgrounds/Purple.png', label: 'Purple', type: 'image' as const },
       { id: 'rainbow-cloud', value: '/backgrounds/Rainbow-Cloud.png', label: 'Rainbow Cloud', type: 'image' as const },
-      { id: 'rainbow', value: '/backgrounds/rainbow.png', label: 'Rainbow', type: 'image' as const },
       { id: 'rosey-wallpaper', value: '/backgrounds/Rosey-Wallpaper.png', label: 'Rosey', type: 'image' as const },
-      { id: 'salon', value: '/backgrounds/Salon.png', label: 'Salon', type: 'image' as const },
-      { id: 'twilight', value: '/backgrounds/Twilight.png', label: 'Twilight', type: 'image' as const },
     ], [])
 
     // Close background picker when clicking outside
@@ -1616,18 +1870,101 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       const canvas = fabricRef.current
       if (!canvas) return
       
-      // Remove any existing background rect
-      const existingBgRect = canvas.getObjects().find((obj: any) => obj.isBackgroundRect)
-      if (existingBgRect) {
-        canvas.remove(existingBgRect)
+      // Get all objects first before removing any
+      const allObjects = canvas.getObjects()
+      
+      // Remove ALL existing background objects (patterns, gradients, other images)
+      const backgroundObjects = allObjects.filter((obj: any) => obj.isBackgroundRect)
+      backgroundObjects.forEach((obj: any) => {
+        canvas.remove(obj)
+      })
+      
+      // Remove default stamps and eraser strokes when selecting a new background
+      const defaultStamps: any[] = []
+      const eraserStrokes: any[] = []
+      
+      for (const obj of allObjects) {
+        // Skip if it's a background object (handled above)
+        if ((obj as any).isBackgroundRect) continue
+        
+        // Check if it's an eraser stroke (path objects marked as eraser)
+        if (obj.type === 'path' && (obj as any).isEraserStroke === true) {
+          eraserStrokes.push(obj)
+          continue
+        }
+        
+        // Check multiple ways to identify default stamps
+        const customId = String((obj as any).customId || '')
+        
+        // Method 1: Check isDefaultStamp property (try different access methods)
+        const isDefaultFlag = (obj as any).isDefaultStamp === true || 
+                             obj.get?.('isDefaultStamp') === true ||
+                             (obj as any).get?.('isDefaultStamp') === true
+        
+        // Method 2: Check customId pattern - default stamps have pattern: stamp-timestamp-index (3 parts)
+        const parts = customId.split('-')
+        const isDefaultPattern = parts.length === 3 && parts[0] === 'stamp' && 
+                                !isNaN(Number(parts[1])) && !isNaN(Number(parts[2]))
+        
+        // Method 3: Check if it's an image type with objectType 'stamp' AND matches default pattern
+        const isImageStamp = obj.type === 'image' && (obj as any).objectType === 'stamp'
+        
+        // Remove if it's marked as default OR matches the default pattern
+        if (isDefaultFlag || (isDefaultPattern && isImageStamp)) {
+          defaultStamps.push(obj)
+        }
       }
+      
+      // Remove all eraser strokes (these hide the background)
+      for (const stroke of eraserStrokes) {
+        canvas.remove(stroke)
+      }
+      
+      // Remove all default stamps
+      for (const stamp of defaultStamps) {
+        canvas.remove(stamp)
+      }
+      
+      // Debug logging
+      console.log('Background selection - Total objects:', allObjects.length)
+      console.log('Default stamps found and removed:', defaultStamps.length)
+      if (defaultStamps.length > 0) {
+        console.log('Removed stamps:', defaultStamps.map((s: any) => ({ 
+          id: s.customId, 
+          isDefault: s.isDefaultStamp,
+          type: s.type,
+          objectType: (s as any).objectType
+        })))
+      }
+      
+      // Render immediately to show stamps removed
+      canvas.renderAll()
       
       // Load the image and set it as background
       FabricImage.fromURL(imageUrl, { crossOrigin: 'anonymous' }).then((img) => {
-        if (!img || !canvas) return
+        // Get fresh canvas reference in case it changed
+        const currentCanvas = fabricRef.current
+        if (!img || !currentCanvas) return
         
-        const canvasWidth = canvas.width || 800
-        const canvasHeight = canvas.height || 600
+        // Double-check and remove any remaining default stamps (in case they were added after initial check)
+        const remainingObjects = currentCanvas.getObjects()
+        const remainingDefaultStamps: any[] = []
+        remainingObjects.forEach((obj: any) => {
+          if (obj.isDefaultStamp === true) {
+            remainingDefaultStamps.push(obj)
+          }
+        })
+        
+        if (remainingDefaultStamps.length > 0) {
+          console.log(`Removing ${remainingDefaultStamps.length} remaining default stamps`)
+          remainingDefaultStamps.forEach((obj: any) => {
+            currentCanvas.remove(obj)
+          })
+          currentCanvas.renderAll()
+        }
+        
+        const canvasWidth = currentCanvas.width || 800
+        const canvasHeight = currentCanvas.height || 600
         
         // Scale image to cover entire canvas (cover mode)
         const scaleX = canvasWidth / (img.width || 1)
@@ -1660,10 +1997,10 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
         
         ;(img as any).isBackgroundRect = true
         
-        canvas.backgroundColor = '#ffffff'
-        canvas.add(img)
-        canvas.sendObjectToBack(img)
-        canvas.renderAll()
+        currentCanvas.backgroundColor = '#ffffff'
+        currentCanvas.add(img)
+        currentCanvas.sendObjectToBack(img)
+        currentCanvas.renderAll()
         saveToHistoryRef.current()
       }).catch((err) => {
         console.error('Error loading background image:', imageUrl, err)

@@ -342,6 +342,7 @@ export default function TopBar({ onHelpClick, canvasRef }: TopBarProps) {
         fontSize: 72,
         fontFamily: font,
         fill: textColor,
+        textAlign: 'center',
         originX: 'center',
         originY: 'center',
         selectable: true,

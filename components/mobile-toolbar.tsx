@@ -70,7 +70,7 @@ export default function MobileToolbar({
     { id: "triangle", label: "🔺" },
     { id: "diamond", label: "🔷" },
   ]
-  const sizes = [2, 5, 10, 15, 20]
+  const sizes = [2, 5, 10, 15, 20, 30, 40, 50, 75, 100]
   const fonts = [
     { id: "pixel", name: "Pixel", style: '"Doto", sans-serif' },
     { id: "bubble", name: "Bubble", style: '"DynaPuff", cursive' },

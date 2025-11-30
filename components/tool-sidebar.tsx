@@ -439,24 +439,24 @@ export default function ToolSidebar({
     { id: 'tropical', value: 'linear-gradient(135deg, #fef08a 0%, #a7f3d0 50%, #67e8f9 100%)', label: 'Tropical', type: 'gradient' as const },
     { id: 'bubblegum', value: 'linear-gradient(180deg, #f472b6 0%, #fbb6ce 50%, #fda4af 100%)', label: 'Bubblegum', type: 'gradient' as const },
     // Image backgrounds
+    { id: 'party', value: '/backgrounds/Party.png', label: 'Party', type: 'image' as const },
+    { id: 'rainbow', value: '/backgrounds/rainbow.png', label: 'Rainbow', type: 'image' as const },
+    { id: 'salon', value: '/backgrounds/Salon.png', label: 'Salon', type: 'image' as const },
+    { id: 'twilight', value: '/backgrounds/Twilight.png', label: 'Twilight', type: 'image' as const },
     { id: 'aquarium', value: '/backgrounds/Aquarium.png', label: 'Aquarium', type: 'image' as const },
-    { id: 'barbie', value: '/backgrounds/barbie.png', label: 'Barbie', type: 'image' as const },
-    { id: 'cake-maker', value: '/backgrounds/Cake-Maker.png', label: 'Cake Maker', type: 'image' as const },
     { id: 'castle', value: '/backgrounds/castle.png', label: 'Castle', type: 'image' as const },
+    { id: 'living-room', value: '/backgrounds/Living-Room.png', label: 'Living Room', type: 'image' as const },
+    { id: 'cake-maker', value: '/backgrounds/Cake-Maker.png', label: 'Cake Maker', type: 'image' as const },
+    { id: 'barbie', value: '/backgrounds/barbie.png', label: 'Barbie', type: 'image' as const },
     { id: 'checkered', value: '/backgrounds/Checkered.png', label: 'Checkered', type: 'image' as const },
     { id: 'glam', value: '/backgrounds/Glam.png', label: 'Glam', type: 'image' as const },
-    { id: 'living-room', value: '/backgrounds/Living-Room.png', label: 'Living Room', type: 'image' as const },
-    { id: 'party', value: '/backgrounds/Party.png', label: 'Party', type: 'image' as const },
     { id: 'hello-kitty-story', value: '/backgrounds/PC-_-Computer---Hello-Kitty-Big-Fun-Deluxe---Activities---Big-Fun-Storymaking-(Mode-Select)-1.png', label: 'Hello Kitty', type: 'image' as const },
     { id: 'hello-kitty-elements', value: '/backgrounds/PC-_-Computer---Hello-Kitty-Big-Fun-Deluxe---Miscellaneous---Shared-Elements-1.png', label: 'HK Elements', type: 'image' as const },
     { id: 'pick-heart', value: '/backgrounds/Pick-Heart.png', label: 'Pick Heart', type: 'image' as const },
     { id: 'pink-heart-clouds', value: '/backgrounds/Pink-Heart-Clouds.png', label: 'Heart Clouds', type: 'image' as const },
     { id: 'purple', value: '/backgrounds/Purple.png', label: 'Purple', type: 'image' as const },
     { id: 'rainbow-cloud', value: '/backgrounds/Rainbow-Cloud.png', label: 'Rainbow Cloud', type: 'image' as const },
-    { id: 'rainbow', value: '/backgrounds/rainbow.png', label: 'Rainbow', type: 'image' as const },
     { id: 'rosey-wallpaper', value: '/backgrounds/Rosey-Wallpaper.png', label: 'Rosey', type: 'image' as const },
-    { id: 'salon', value: '/backgrounds/Salon.png', label: 'Salon', type: 'image' as const },
-    { id: 'twilight', value: '/backgrounds/Twilight.png', label: 'Twilight', type: 'image' as const },
   ]
 
   // Handle custom background upload
@@ -519,7 +519,10 @@ export default function ToolSidebar({
     {
       id: "junior",
       label: "Junior",
-      images: []
+      images: [
+        "curious.png", "face.png", "junior box.png", "kitty.png", 
+        "lazy.png", "look.png", "lounge.png", "stare.png", "stretch.png"
+      ]
     },
     {
       id: "twilight",
@@ -537,7 +540,7 @@ export default function ToolSidebar({
 
   const imageStampSizes = [40, 60, 80, 100, 150, 200]
 
-  const sizes = [2, 5, 10, 15, 20]
+  const sizes = [2, 5, 10, 15, 20, 30, 40, 50, 75, 100]
   const stampSizes = [20, 32, 48, 64, 80]
   const brushShapes: { id: BrushShape; label: string; icon: string }[] = [
     { id: "round", label: "Round", icon: "⚫" },
@@ -562,8 +565,26 @@ export default function ToolSidebar({
     { text: "Happy Birthday Queen!", style: "accent" as const },
   ]
 
-  // Generate stamp list from KidPix icons (1-109, skipping 19-20 which don't exist)
-  const stamps = [
+  // Generate stamp list - Tamagotchi stamps first, then KidPix icons (1-109, skipping 19-20 which don't exist)
+  const tamagotchiStamps = [
+    {
+      id: `/stamps/LCD Handhelds - Tamagotchi Smart - Emoji - Anniversary Party Friends 2.png`,
+      label: `/stamps/LCD Handhelds - Tamagotchi Smart - Emoji - Anniversary Party Friends 2.png`,
+      isImage: true,
+    },
+    {
+      id: `/stamps/LCD Handhelds - Tamagotchi Smart - Emoji - Anniversary Party Friends 3.png`,
+      label: `/stamps/LCD Handhelds - Tamagotchi Smart - Emoji - Anniversary Party Friends 3.png`,
+      isImage: true,
+    },
+    {
+      id: `/stamps/LCD Handhelds - Tamagotchi Smart - Emoji - Anniversary Party Friends 4.png`,
+      label: `/stamps/LCD Handhelds - Tamagotchi Smart - Emoji - Anniversary Party Friends 4.png`,
+      isImage: true,
+    },
+  ]
+  
+  const kidpixStamps = [
     ...Array.from({ length: 18 }, (_, i) => i + 1),
     ...Array.from({ length: 89 }, (_, i) => i + 21),
   ].map(n => ({
@@ -571,6 +592,8 @@ export default function ToolSidebar({
     label: `/stamps/kidpix-spritesheet-0-${n}.png`,
     isImage: true,
   }))
+  
+  const stamps = [...tamagotchiStamps, ...kidpixStamps]
 
   const shapes = [
     { id: "heart", label: "💜" },
@@ -776,7 +799,7 @@ export default function ToolSidebar({
                     <div 
                       className="w-12 h-9 border-2 rounded-sm"
                       style={{ 
-                        backgroundImage: `url(${bg.value})`,
+                        backgroundImage: `url('${bg.value}')`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                         borderColor: currentBackground === bg.value ? '#ff1493' : '#ccc',

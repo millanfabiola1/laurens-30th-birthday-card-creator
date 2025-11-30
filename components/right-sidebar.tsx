@@ -50,7 +50,7 @@ export default function RightSidebar({
     { id: "narrow", name: "Narrow", style: '"Instrument Serif", serif' },
     { id: "sans-serif", name: "Sans Serif", style: '"Geist", sans-serif' },
   ]
-  const sizes = [2, 5, 10, 15, 20]
+  const sizes = [2, 5, 10, 15, 20, 30, 40, 50, 75, 100]
   const brushShapes: { id: BrushShape; label: string; icon: string }[] = [
     { id: "round", label: "Round", icon: "⚫" },
     { id: "square", label: "Square", icon: "⬛" },

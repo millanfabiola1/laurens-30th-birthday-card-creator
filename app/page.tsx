@@ -196,7 +196,8 @@ export default function Home() {
         fontSize: 96, // Very large text
         fontFamily: getFontFamily(currentFont),
         fill: currentColor,
-        charSpacing: -2, // Letter spacing
+        charSpacing: currentFont === 'pixel' ? 0 : -2, // No spacing for pixel font, -2 for others
+        textAlign: 'center',
         originX: 'center',
         originY: 'center',
         selectable: true,
@@ -238,7 +239,8 @@ export default function Home() {
         fontSize: 36,
         fontFamily: getFontFamily(currentFont),
         fill: currentColor,
-        charSpacing: -2, // Letter spacing
+        charSpacing: currentFont === 'pixel' ? 0 : -2, // No spacing for pixel font, -2 for others
+        textAlign: 'center',
         originX: 'center',
         originY: 'center',
         selectable: true,
@@ -284,11 +286,12 @@ export default function Home() {
 
   return (
     <div className="flex flex-col h-dvh mac-desktop overflow-hidden">
-      <TopBar onHelpClick={() => setIsTourOpen(true)} canvasRef={canvasRef} />
-      <GuidedTour isOpen={isTourOpen} onClose={() => setIsTourOpen(false)} />
+      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 flex flex-col flex-1 overflow-hidden">
+        <TopBar onHelpClick={() => setIsTourOpen(true)} canvasRef={canvasRef} />
+        <GuidedTour isOpen={isTourOpen} onClose={() => setIsTourOpen(false)} />
 
-      {/* Desktop layout */}
-      <div className="hidden md:flex flex-1 gap-2 p-2 overflow-hidden">
+        {/* Desktop layout */}
+        <div className="hidden md:flex flex-1 gap-2 p-2 overflow-hidden">
         <ToolSidebar
           currentTool={currentTool}
           setCurrentTool={setCurrentTool}
@@ -410,6 +413,7 @@ export default function Home() {
           setCurrentFont={setCurrentFont}
           addSpecialText={addSpecialText}
         />
+        </div>
       </div>
     </div>
   )
