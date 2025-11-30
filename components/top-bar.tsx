@@ -210,6 +210,18 @@ export default function TopBar({ onHelpClick, canvasRef }: TopBarProps) {
     const canvasWidth = fabricCanvas.width || 800
     const canvasHeight = fabricCanvas.height || 600
 
+    // Calculate scale factor for mobile/tablet - base sizes are for 800x600 canvas
+    const baseCanvasWidth = 800
+    const baseCanvasHeight = 600
+    const isMobileOrTablet = canvasWidth < 1024
+    const scaleFactor = isMobileOrTablet 
+      ? Math.min(canvasWidth / baseCanvasWidth, canvasHeight / baseCanvasHeight)
+      : 1
+    
+    // Maximum image size as percentage of canvas (smaller on mobile)
+    const maxImageSizePercent = isMobileOrTablet ? 0.4 : 0.6
+    const maxImageSize = Math.min(canvasWidth, canvasHeight) * maxImageSizePercent
+
     try {
       const bgChoice = randomPick(backgroundsWithColors)
       const bgUrl = bgChoice.url
@@ -239,8 +251,10 @@ export default function TopBar({ onHelpClick, canvasRef }: TopBarProps) {
 
       const addImage = async (url: string, x: number, y: number, size: number, angle = 0) => {
         try {
+          // Scale the size based on canvas dimensions and limit maximum
+          const scaledSize = Math.min(size * scaleFactor, maxImageSize)
           const img = await FabricImage.fromURL(url, { crossOrigin: 'anonymous' })
-          const imgScale = size / Math.max(img.width || 100, img.height || 100)
+          const imgScale = scaledSize / Math.max(img.width || 100, img.height || 100)
           img.set({
             left: x,
             top: y,
@@ -255,7 +269,7 @@ export default function TopBar({ onHelpClick, canvasRef }: TopBarProps) {
             hasBorders: true,
             cornerColor: '#ff1493',
             cornerStyle: 'circle',
-            cornerSize: 12,
+            cornerSize: Math.max(8, 12 * scaleFactor), // Scale corner size too
             borderColor: '#ff1493',
           })
           fabricCanvas.add(img)
@@ -267,7 +281,8 @@ export default function TopBar({ onHelpClick, canvasRef }: TopBarProps) {
       }
       
       const addBalloon = async (x: number, y: number, angle = 0) => {
-        const size = 100 + Math.random() * 100
+        const baseSize = 100 + Math.random() * 100
+        const size = Math.min(baseSize * scaleFactor, maxImageSize)
         await addImage(randomPick(balloons), x, y, size, angle)
       }
 
@@ -328,18 +343,22 @@ export default function TopBar({ onHelpClick, canvasRef }: TopBarProps) {
       }
 
       const foodY = canvasHeight * 0.62
-      await addImage(randomPick(cakes), canvasWidth * 0.5, foodY, 500)
+      // Scale cake size - it's the largest element, so ensure it fits
+      const cakeSize = Math.min(500 * scaleFactor, maxImageSize * 1.2) // Allow cake to be slightly larger
+      await addImage(randomPick(cakes), canvasWidth * 0.5, foodY, cakeSize)
 
       const text = randomPick(birthdayTexts)
       const font = randomPick(fonts)
       const textColor = randomPick(complementaryTextColors)
       
-      const textY = foodY - 280
+      // Scale text position and size for mobile
+      const textY = foodY - (280 * scaleFactor)
+      const fontSize = Math.max(32, 72 * scaleFactor) // Minimum 32px for readability
 
       const itext = new IText(text, {
         left: canvasWidth / 2,
         top: textY,
-        fontSize: 72,
+        fontSize: fontSize,
         fontFamily: font,
         fill: textColor,
         textAlign: 'center',
