@@ -189,6 +189,9 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       img.src = currentImageStamp
     }, [currentTool, currentImageStamp])
 
+    // Pink cursor as default
+    const pinkCursor = "url('/pink-cursor.png'), auto"
+    
     // Update Fabric.js canvas cursor when stamp/image cursor changes
     useEffect(() => {
       const canvas = fabricRef.current
@@ -222,8 +225,8 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
         canvas.defaultCursor = 'crosshair'
         canvas.hoverCursor = 'crosshair'
       } else {
-        canvas.defaultCursor = 'default'
-        canvas.hoverCursor = 'move'
+        canvas.defaultCursor = pinkCursor
+        canvas.hoverCursor = pinkCursor
       }
     }, [currentTool, stampCursorUrl, imageCursorUrl, isReady])
 
@@ -2173,7 +2176,7 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
                     ? 'crosshair'
                     : currentTool === 'fill'
                       ? 'crosshair'
-                      : 'default'
+                      : "url('/pink-cursor.png'), auto"
           }}
         />
         

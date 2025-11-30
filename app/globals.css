@@ -461,6 +461,12 @@ button, [role="button"] {
 /* Disable pull-to-refresh on the app (prevents accidental refreshes) */
 html, body {
   overscroll-behavior-y: contain;
+  cursor: url('/pink-cursor.png'), auto;
+}
+
+/* Custom pink cursor for all interactive elements */
+a, button, [role="button"], input, select, textarea, label {
+  cursor: url('/pink-cursor.png'), pointer;
 }
 
 /* ============================================
