@@ -189,8 +189,8 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       img.src = currentImageStamp
     }, [currentTool, currentImageStamp])
 
-    // Pink cursor as default
-    const pinkCursor = "url('/pink-cursor.png'), auto"
+    // Pink cursor as default (32x32 with hotspot at top-left)
+    const pinkCursor = "url('/pink-cursor.png') 0 0, auto"
     
     // Update Fabric.js canvas cursor when stamp/image cursor changes
     useEffect(() => {
@@ -2176,7 +2176,7 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
                     ? 'crosshair'
                     : currentTool === 'fill'
                       ? 'crosshair'
-                      : "url('/pink-cursor.png'), auto"
+                      : "url('/pink-cursor.png') 0 0, auto"
           }}
         />
         
