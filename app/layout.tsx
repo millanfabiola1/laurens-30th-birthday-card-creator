@@ -50,6 +50,25 @@ export const metadata: Metadata = {
     ],
     apple: "/apple-icon.png",
   },
+  openGraph: {
+    title: "Lauren's 30th Birthday Card Creator",
+    description: "Design a custom birthday card in retro 90s/2000s style",
+    images: [
+      {
+        url: "/thumbnail2.png",
+        width: 1200,
+        height: 630,
+        alt: "Lauren's 30th Birthday Card Creator",
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Lauren's 30th Birthday Card Creator",
+    description: "Design a custom birthday card in retro 90s/2000s style",
+    images: ["/thumbnail2.png"],
+  },
 }
 
 export default function RootLayout({
