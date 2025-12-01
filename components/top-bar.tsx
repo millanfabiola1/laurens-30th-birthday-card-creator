@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { MacWindow, MacButton, macStyles } from "./mac-ui"
 import { playSound } from "@/lib/sound-manager"
 import Countdown from "./countdown"
@@ -145,6 +145,124 @@ const fonts = [
 export default function TopBar({ onHelpClick, canvasRef }: TopBarProps) {
   const [isExporting, setIsExporting] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [isMuted, setIsMuted] = useState(false)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  // Setup background music with random start position
+  useEffect(() => {
+    const audio = new Audio('/HBD-Lauren.mp3')
+    audio.loop = false // We'll handle looping manually to restart from random position
+    audio.volume = 0.2 // Low chill volume (20%)
+    audio.preload = 'auto'
+    audioRef.current = audio
+
+    let hasStarted = false
+    let randomStartSet = false
+
+    // Function to set random start position
+    const setRandomStart = () => {
+      if (audio.duration) {
+        const randomStart = Math.random() * audio.duration * 0.9
+        audio.currentTime = randomStart
+        randomStartSet = true
+        return randomStart
+      }
+      return 0
+    }
+
+    // Set random start position when metadata is loaded
+    const handleLoadedMetadata = () => {
+      if (audio.duration && !randomStartSet) {
+        setRandomStart()
+      }
+    }
+
+    // Try to play when ready
+    const handleCanPlay = () => {
+      if (!hasStarted && !isMuted && audio.duration) {
+        if (!randomStartSet) {
+          setRandomStart()
+        }
+        audio.play().catch((err) => {
+          // Autoplay prevented - will play on user interaction
+          console.log('Audio autoplay prevented, waiting for user interaction')
+        })
+        hasStarted = true
+      }
+    }
+
+    // Handle when track ends - restart from random position
+    const handleEnded = () => {
+      if (audio.duration) {
+        setRandomStart()
+        audio.play().catch(console.error)
+      }
+    }
+
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata)
+    audio.addEventListener('canplaythrough', handleCanPlay)
+    audio.addEventListener('ended', handleEnded)
+
+    // Load the audio
+    audio.load()
+
+    return () => {
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
+      audio.removeEventListener('canplaythrough', handleCanPlay)
+      audio.removeEventListener('ended', handleEnded)
+      audio.pause()
+      audio.src = ''
+    }
+  }, [])
+
+  // Handle mute/unmute
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.muted = isMuted
+      // If unmuting and audio hasn't started, try to play
+      if (!isMuted && audioRef.current.paused && audioRef.current.duration) {
+        if (audioRef.current.currentTime === 0) {
+          // Set random start if not already set
+          const randomStart = Math.random() * audioRef.current.duration * 0.9
+          audioRef.current.currentTime = randomStart
+        }
+        audioRef.current.play().catch(console.error)
+      }
+    }
+  }, [isMuted])
+
+  // Play audio on first user interaction (required by browsers)
+  useEffect(() => {
+    const handleFirstInteraction = () => {
+      if (audioRef.current && audioRef.current.paused && !isMuted) {
+        if (audioRef.current.duration) {
+          if (audioRef.current.currentTime === 0) {
+            // Set random start position on first play
+            const randomStart = Math.random() * audioRef.current.duration * 0.9
+            audioRef.current.currentTime = randomStart
+          }
+          audioRef.current.play().catch(console.error)
+        }
+      }
+    }
+
+    // Try multiple event types to catch user interaction
+    const events = ['click', 'touchstart', 'keydown', 'mousedown']
+    events.forEach(event => {
+      document.addEventListener(event, handleFirstInteraction, { once: true })
+    })
+
+    return () => {
+      events.forEach(event => {
+        document.removeEventListener(event, handleFirstInteraction)
+      })
+    }
+  }, [isMuted])
+
+  const handleMuteToggle = () => {
+    setIsMuted(!isMuted)
+    playSound("click")
+  }
 
   const handleHelpClick = () => {
     playSound("click")
@@ -431,6 +549,18 @@ export default function TopBar({ onHelpClick, canvasRef }: TopBarProps) {
             {isExporting ? "💾..." : "💾 Save"}
           </MacButton>
           <MacButton onClick={handleHelpClick} style={{ padding: "4px 8px", fontSize: "10px" }} className="sm:!p-[6px_14px] sm:!text-xs">💕 Help</MacButton>
+          <MacButton 
+            onClick={handleMuteToggle} 
+            style={{ 
+              padding: "4px 8px", 
+              fontSize: "10px",
+              opacity: isMuted ? 0.6 : 1
+            }} 
+            className="sm:!p-[6px_14px] sm:!text-xs"
+            title={isMuted ? "Unmute music" : "Mute music"}
+          >
+            {isMuted ? "🔇" : "🔊"}
+          </MacButton>
         </div>
         <div className="hidden sm:block">
           <Countdown targetDate="2025-12-21" timezone="America/Denver" />
