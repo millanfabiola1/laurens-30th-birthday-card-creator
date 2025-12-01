@@ -38,9 +38,27 @@ export const metadata: Metadata = {
       {
         url: "/favicon.png",
         type: "image/png",
+        sizes: "64x64",
+      },
+      {
+        url: "/favicon.png",
+        type: "image/png",
+        sizes: "32x32",
+      },
+      {
+        url: "/favicon.png",
+        type: "image/png",
+        sizes: "16x16",
       },
     ],
-    apple: "/favicon.png",
+    apple: [
+      {
+        url: "/favicon.png",
+        sizes: "180x180",
+        type: "image/png",
+      },
+    ],
+    shortcut: "/favicon.png",
   },
   openGraph: {
     title: "Lauren's 30th Birthday Card Creator",
