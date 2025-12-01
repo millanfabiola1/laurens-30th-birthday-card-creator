@@ -1190,6 +1190,15 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
           const canvasWidth = canvas.width || 800
           const canvasHeight = canvas.height || 600
           
+          // Calculate responsive stamp size for mobile/tablet
+          const isMobileOrTablet = canvasWidth < 1024
+          const baseCanvasWidth = 800
+          const scaleFactor = isMobileOrTablet 
+            ? Math.min(canvasWidth / baseCanvasWidth, canvasHeight / 600)
+            : 1
+          const baseStampSize = 48
+          const stampSize = Math.max(24, baseStampSize * scaleFactor) // Minimum 24px for visibility
+          
           // Get original image dimensions (try multiple methods for reliability)
           let originalWidth = img.width || 1
           let originalHeight = img.height || 1
@@ -1268,10 +1277,9 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
               }
               
               const stampPath = `/stamps/kidpix-spritesheet-0-${stampNum}.png`
-              const stampSize = 48 // Fixed size for first-time visitor stamps
               
-              // Random position on canvas (with some padding from edges)
-              const padding = 50
+              // Random position on canvas (with some padding from edges - scaled for mobile)
+              const padding = Math.max(20, 50 * scaleFactor)
               const x = Math.random() * (canvasWidth - padding * 2) + padding
               const y = Math.random() * (canvasHeight - padding * 2) + padding
               
@@ -1309,7 +1317,7 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
                   hasBorders: true,
                   cornerColor: '#ff1493',
                   cornerStyle: 'circle',
-                  cornerSize: 12,
+                  cornerSize: Math.max(8, 12 * scaleFactor), // Scale corner size for mobile
                   borderColor: '#ff1493',
                   transparentCorners: false,
                   lockUniScaling: false,
