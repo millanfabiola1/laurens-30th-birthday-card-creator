@@ -60,3 +60,5 @@ output_path = os.path.join(os.path.dirname(__file__), 'public', 'thumbnail2.png'
 img.save(output_path)
 print(f'Created pink thumbnail at {output_path}')
 
+
+

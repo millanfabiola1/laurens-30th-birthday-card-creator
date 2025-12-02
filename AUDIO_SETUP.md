@@ -1,26 +1,35 @@
 # Audio File Setup
 
-The background music file `HBD-Lauren.mp3` is 119MB, which exceeds GitHub and Vercel's 100MB file size limit.
+The background music file `lauren-mix.MP3` is 52MB, which exceeds Vercel's recommended 50MB limit for static assets.
 
-## Options:
+## Current Issue
+The file may not load properly on Vercel due to size limitations. Vercel can serve files up to 100MB, but files over 50MB may experience timeouts or loading issues.
+
+## Solutions:
 
 ### Option 1: Compress the MP3 (Recommended)
-Compress the MP3 file to under 100MB using an audio compression tool, then:
-1. Replace `public/HBD-Lauren.mp3` with the compressed version
-2. The file will be automatically included in Vercel deployments
+Compress `lauren-mix.MP3` to under 30MB using an audio compression tool:
+- Online tools: CloudConvert, Online-Convert, or Audacity
+- Target: 96-112 kbps bitrate should reduce size significantly
+- Then replace `public/lauren-mix.MP3` with the compressed version
 
-### Option 2: Host Externally
-1. Upload `HBD-Lauren.mp3` to a CDN (Cloudinary, AWS S3, etc.)
+### Option 2: Host on CDN (Best for Large Files)
+1. Upload `lauren-mix.MP3` to a CDN:
+   - **Cloudinary** (free tier): https://cloudinary.com
+   - **AWS S3 + CloudFront**
+   - **Google Cloud Storage**
 2. Update the audio path in `components/top-bar.tsx` line 153:
    ```typescript
-   const audio = new Audio('YOUR_CDN_URL/HBD-Lauren.mp3')
+   const audio = new Audio('YOUR_CDN_URL/lauren-mix.MP3')
    ```
 
-### Option 3: Manual Vercel Upload
-After deployment, manually upload the file to Vercel's file system (if supported by your plan).
+### Option 3: Use Vercel Blob Storage
+If you have a Vercel Pro account, you can use Vercel Blob Storage for large files.
 
 ## Current Status
 ✅ Code is ready and deployed
 ✅ Mute button is functional
-⏳ Waiting for audio file to be available
+⚠️ Audio file may not load due to size (52MB exceeds recommended 50MB limit)
+
+
 

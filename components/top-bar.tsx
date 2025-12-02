@@ -150,7 +150,7 @@ export default function TopBar({ onHelpClick, canvasRef }: TopBarProps) {
 
   // Setup background music with random start position
   useEffect(() => {
-    const audio = new Audio('/lauren-mix.MP3')
+    const audio = new Audio('/lauren-mix.mp3')
     audio.loop = false // We'll handle looping manually to restart from random position
     audio.volume = 0.2 // Low chill volume (20%)
     audio.preload = 'auto'
