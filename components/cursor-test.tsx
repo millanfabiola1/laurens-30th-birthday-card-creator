@@ -20,7 +20,12 @@ export function CursorTest() {
     // Function to force cursor on specific element
     const forceCursorOnElement = (el: HTMLElement | null) => {
       if (!el) return
+      // Use setProperty with important flag
       el.style.setProperty('cursor', cursorStyle, 'important')
+      // Also try direct assignment as fallback
+      if (el.style.cursor && !el.style.cursor.includes('pink-cursor')) {
+        el.style.cursor = cursorStyle
+      }
     }
 
     // Apply cursor to html and body
@@ -29,50 +34,73 @@ export function CursorTest() {
       forceCursorOnElement(document.body)
       
       // Force on canvas elements specifically (Fabric.js creates these)
-      const canvases = document.querySelectorAll('canvas, .upper-canvas, .lower-canvas')
+      const canvases = document.querySelectorAll('canvas, .upper-canvas, .lower-canvas, .canvas-container')
       canvases.forEach(canvas => {
         forceCursorOnElement(canvas as HTMLElement)
+      })
+
+      // Force on all elements that have a style
+      const allElements = document.querySelectorAll('*')
+      allElements.forEach(el => {
+        const htmlEl = el as HTMLElement
+        if (htmlEl.style && htmlEl.style.cursor && !htmlEl.style.cursor.includes('pink-cursor')) {
+          forceCursorOnElement(htmlEl)
+        }
       })
     }
 
     // Apply immediately
     applyCursor()
 
-    // Continuously enforce cursor - override any dynamic changes
+    // Very frequent interval to catch Fabric.js cursor changes
     const interval = setInterval(() => {
       applyCursor()
-    }, 50) // Check every 50ms
+    }, 16) // ~60fps - check every frame
 
-    // Also enforce on mouse movement
-    const handleMouseMove = () => {
-      applyCursor()
+    // Intercept ALL mouse events and reapply cursor immediately
+    const handleMouseEvent = (e: MouseEvent) => {
+      // Use requestAnimationFrame for immediate next frame
+      requestAnimationFrame(() => {
+        applyCursor()
+        // Also force on the target element
+        if (e.target) {
+          forceCursorOnElement(e.target as HTMLElement)
+        }
+      })
     }
-    document.addEventListener('mousemove', handleMouseMove, true)
+
+    // Capture all mouse events at capture phase (before they reach other handlers)
+    document.addEventListener('mousemove', handleMouseEvent, { capture: true, passive: true })
+    document.addEventListener('mouseover', handleMouseEvent, { capture: true, passive: true })
+    document.addEventListener('mouseenter', handleMouseEvent, { capture: true, passive: true })
+    document.addEventListener('mouseleave', handleMouseEvent, { capture: true, passive: true })
 
     // Watch for style changes on elements (Fabric.js might be setting inline styles)
     const observer = new MutationObserver((mutations) => {
+      let shouldReapply = false
       mutations.forEach(mutation => {
         if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
           const target = mutation.target as HTMLElement
-          if (target) {
-            forceCursorOnElement(target)
+          if (target && target.style && target.style.cursor) {
+            if (!target.style.cursor.includes('pink-cursor')) {
+              shouldReapply = true
+              forceCursorOnElement(target)
+            }
           }
         }
         // Also check added nodes
         if (mutation.type === 'childList') {
+          shouldReapply = true
           mutation.addedNodes.forEach(node => {
             if (node.nodeType === 1) {
               forceCursorOnElement(node as HTMLElement)
-              // Also check children
-              const children = (node as HTMLElement).querySelectorAll('*')
-              children.forEach(child => {
-                forceCursorOnElement(child as HTMLElement)
-              })
             }
           })
         }
       })
-      applyCursor()
+      if (shouldReapply) {
+        requestAnimationFrame(applyCursor)
+      }
     })
 
     observer.observe(document.documentElement, {
@@ -82,32 +110,46 @@ export function CursorTest() {
       subtree: true,
     })
 
-    // Intercept style.cursor assignments
+    // Intercept style.cursor assignments - override immediately
     const originalSetProperty = CSSStyleDeclaration.prototype.setProperty
     CSSStyleDeclaration.prototype.setProperty = function(property: string, value: string | null, priority?: string) {
       if (property === 'cursor' && value && !value.includes('pink-cursor.png')) {
-        // Override cursor changes that don't use our cursor
-        originalSetProperty.call(this, 'cursor', cursorStyle, 'important')
-      } else {
-        originalSetProperty.call(this, property, value, priority)
+        // Immediately override with our cursor
+        return originalSetProperty.call(this, 'cursor', cursorStyle, 'important')
       }
+      return originalSetProperty.call(this, property, value, priority)
     }
 
-    // Intercept direct cursor assignments
-    const styleDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'style') || 
-                            Object.getOwnPropertyDescriptor(Element.prototype, 'style')
-    
-    if (styleDescriptor && styleDescriptor.set) {
-      const originalStyleSetter = styleDescriptor.set
-      // Note: This is a more aggressive approach but might not work in all browsers
+    // Intercept direct style.cursor assignment
+    const originalCursorDescriptor = Object.getOwnPropertyDescriptor(CSSStyleDeclaration.prototype, 'cursor')
+    if (originalCursorDescriptor) {
+      Object.defineProperty(CSSStyleDeclaration.prototype, 'cursor', {
+        get() {
+          return originalCursorDescriptor.get?.call(this) || ''
+        },
+        set(value: string) {
+          if (value && !value.includes('pink-cursor.png')) {
+            return originalCursorDescriptor.set?.call(this, cursorStyle)
+          }
+          return originalCursorDescriptor.set?.call(this, value)
+        },
+        enumerable: true,
+        configurable: true,
+      })
     }
 
     return () => {
       clearInterval(interval)
       observer.disconnect()
-      document.removeEventListener('mousemove', handleMouseMove, true)
-      // Restore original setProperty
+      document.removeEventListener('mousemove', handleMouseEvent, true)
+      document.removeEventListener('mouseover', handleMouseEvent, true)
+      document.removeEventListener('mouseenter', handleMouseEvent, true)
+      document.removeEventListener('mouseleave', handleMouseEvent, true)
+      // Restore original methods
       CSSStyleDeclaration.prototype.setProperty = originalSetProperty
+      if (originalCursorDescriptor) {
+        Object.defineProperty(CSSStyleDeclaration.prototype, 'cursor', originalCursorDescriptor)
+      }
     }
   }, [])
 
