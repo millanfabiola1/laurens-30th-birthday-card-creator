@@ -210,7 +210,7 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       }
     }, [currentTool, stampCursorUrl, imageCursorUrl])
 
-    // Update Fabric.js canvas cursor
+    // Update Fabric.js canvas cursor - continuously enforce pink cursor
     useEffect(() => {
       const canvas = fabricRef.current
       if (!canvas) return
@@ -221,6 +221,50 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       canvas.moveCursor = 'inherit'
       canvas.rotationCursor = 'inherit'
       canvas.freeDrawingCursor = 'inherit'
+
+      // Continuously enforce cursor on canvas elements
+      const enforceCursor = () => {
+        const upperCanvas = canvas.upperCanvasEl
+        const lowerCanvas = canvas.lowerCanvasEl
+        const containerEl = canvas.getElement().parentElement
+
+        if (upperCanvas) {
+          upperCanvas.style.cursor = `url('/pink-cursor.png') 16 16, auto`
+          upperCanvas.style.setProperty('cursor', `url('/pink-cursor.png') 16 16, auto`, 'important')
+        }
+        if (lowerCanvas) {
+          lowerCanvas.style.cursor = `url('/pink-cursor.png') 16 16, auto`
+          lowerCanvas.style.setProperty('cursor', `url('/pink-cursor.png') 16 16, auto`, 'important')
+        }
+        if (containerEl) {
+          containerEl.style.cursor = `url('/pink-cursor.png') 16 16, auto`
+          containerEl.style.setProperty('cursor', `url('/pink-cursor.png') 16 16, auto`, 'important')
+        }
+      }
+
+      // Apply immediately
+      enforceCursor()
+
+      // Set up interval to continuously enforce
+      const interval = setInterval(enforceCursor, 50)
+
+      // Also enforce on canvas events
+      canvas.on('mouse:move', enforceCursor)
+      canvas.on('mouse:down', enforceCursor)
+      canvas.on('mouse:up', enforceCursor)
+      canvas.on('mouse:over', enforceCursor)
+      canvas.on('object:moving', enforceCursor)
+      canvas.on('object:modified', enforceCursor)
+
+      return () => {
+        clearInterval(interval)
+        canvas.off('mouse:move', enforceCursor)
+        canvas.off('mouse:down', enforceCursor)
+        canvas.off('mouse:up', enforceCursor)
+        canvas.off('mouse:over', enforceCursor)
+        canvas.off('object:moving', enforceCursor)
+        canvas.off('object:modified', enforceCursor)
+      }
     }, [isReady])
 
     // Update selected text color when currentColor changes

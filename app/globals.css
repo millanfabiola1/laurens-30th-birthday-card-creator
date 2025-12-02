@@ -513,18 +513,35 @@ body * {
   cursor: url('/pink-cursor.png') 16 16, auto !important;
 }
 
-/* Fabric.js canvases - target both lower and upper canvas */
+/* Fabric.js canvases - target both lower and upper canvas with maximum specificity */
 .canvas-container,
 .canvas-container *,
+.canvas-container *::before,
+.canvas-container *::after,
 .canvas-container canvas,
 .canvas-container canvas:hover,
 .canvas-container canvas:active,
+.canvas-container canvas:focus,
 .upper-canvas,
 .upper-canvas:hover,
 .upper-canvas:active,
+.upper-canvas:focus,
 .lower-canvas,
 .lower-canvas:hover,
-.lower-canvas:active {
+.lower-canvas:active,
+.lower-canvas:focus,
+canvas.upper-canvas,
+canvas.lower-canvas,
+div.upper-canvas,
+div.lower-canvas {
+  cursor: url('/pink-cursor.png') 16 16, auto !important;
+}
+
+/* Force cursor on all canvas-related elements that might be dynamically created */
+[class*="canvas"],
+[class*="Canvas"],
+[class*="upper"],
+[class*="lower"] {
   cursor: url('/pink-cursor.png') 16 16, auto !important;
 }
 
