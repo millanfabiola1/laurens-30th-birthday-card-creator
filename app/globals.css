@@ -473,20 +473,15 @@ body {
   cursor: url('/pink-cursor.png') 16 16, auto !important;
 }
 
-/* Apply to all elements and pseudo-elements */
-*,
-*::before,
-*::after {
-  cursor: url('/pink-cursor.png') 16 16, auto !important;
+/* Apply to all elements */
+* {
+  cursor: inherit !important;
 }
 
-/* Ensure all states use the cursor */
 *:hover,
 *:active,
-*:focus,
-*:visited,
-*:disabled {
-  cursor: url('/pink-cursor.png') 16 16, auto !important;
+*:focus {
+  cursor: inherit !important;
 }
 
 /* ============================================
