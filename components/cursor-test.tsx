@@ -85,21 +85,28 @@ export function CursorTest() {
     // Apply immediately
     applyCursor()
 
-    // Periodic check to catch Fabric.js cursor changes (less frequent)
+    // Frequent check to catch Fabric.js cursor changes
     const interval = setInterval(() => {
       applyCursor()
-    }, 200) // Check every 200ms
+    }, 50) // Check every 50ms to catch rapid changes
 
-    // Intercept ALL mouse events and reapply cursor immediately
+    // Intercept ALL mouse events and reapply cursor IMMEDIATELY
     const handleMouseEvent = (e: MouseEvent) => {
-      // Use requestAnimationFrame for immediate next frame
-      requestAnimationFrame(() => {
-        applyCursor()
-        // Also force on the target element
-        if (e.target) {
-          forceCursorOnElement(e.target as HTMLElement)
+      // Apply immediately, don't wait for next frame
+      applyCursor()
+      // Also force on the target element immediately
+      if (e.target) {
+        const target = e.target as HTMLElement
+        forceCursorOnElement(target)
+        // Also force on parent elements
+        let parent = target.parentElement
+        let depth = 0
+        while (parent && depth < 2) {
+          forceCursorOnElement(parent)
+          parent = parent.parentElement
+          depth++
         }
-      })
+      }
     }
 
     // Capture all mouse events at capture phase (before they reach other handlers)
@@ -107,6 +114,8 @@ export function CursorTest() {
     document.addEventListener('mouseover', handleMouseEvent, { capture: true, passive: true })
     document.addEventListener('mouseenter', handleMouseEvent, { capture: true, passive: true })
     document.addEventListener('mouseleave', handleMouseEvent, { capture: true, passive: true })
+    document.addEventListener('mousedown', handleMouseEvent, { capture: true, passive: true })
+    document.addEventListener('mouseup', handleMouseEvent, { capture: true, passive: true })
 
     // Watch for style changes on elements (Fabric.js might be setting inline styles)
     const observer = new MutationObserver((mutations) => {
@@ -143,24 +152,44 @@ export function CursorTest() {
       subtree: true,
     })
 
-    // Intercept style.cursor assignments - override immediately
+    // Aggressively intercept ALL cursor changes - no exceptions
     const originalSetProperty = CSSStyleDeclaration.prototype.setProperty
     CSSStyleDeclaration.prototype.setProperty = function(property: string, value: string | null, priority?: string) {
-      if (property === 'cursor' && value && !value.includes('pink-cursor.png') && value !== 'none') {
-        // Immediately override with our cursor
+      if (property === 'cursor') {
+        // ALWAYS use pink cursor, no matter what
+        if (this.parentRule || (this as any).ownerElement) {
+          const element = (this as any).ownerElement
+          if (element && (element.tagName === 'CANVAS' || element.classList.contains('upper-canvas') || element.classList.contains('lower-canvas'))) {
+            return originalSetProperty.call(this, 'cursor', `url('/pink-cursor.png') 0 0, crosshair`, 'important')
+          }
+        }
         return originalSetProperty.call(this, 'cursor', cursorStyle, 'important')
       }
       return originalSetProperty.call(this, property, value, priority)
     }
 
-    // Intercept direct style.cursor assignment
+    // Intercept direct style.cursor assignment - COMPLETELY block non-pink cursors
     const originalCursorDescriptor = Object.getOwnPropertyDescriptor(CSSStyleDeclaration.prototype, 'cursor')
     if (originalCursorDescriptor) {
       Object.defineProperty(CSSStyleDeclaration.prototype, 'cursor', {
         get() {
-          return originalCursorDescriptor.get?.call(this) || ''
+          const value = originalCursorDescriptor.get?.call(this) || ''
+          // If it's not our cursor, return our cursor instead
+          if (value && !value.includes('pink-cursor.png') && value !== 'none') {
+            const element = (this as any).ownerElement
+            if (element && (element.tagName === 'CANVAS' || element.classList.contains('upper-canvas') || element.classList.contains('lower-canvas'))) {
+              return `url('/pink-cursor.png') 0 0, crosshair`
+            }
+            return cursorStyle
+          }
+          return value
         },
         set(value: string) {
+          // NEVER allow setting non-pink cursors
+          const element = (this as any).ownerElement
+          if (element && (element.tagName === 'CANVAS' || element.classList.contains('upper-canvas') || element.classList.contains('lower-canvas'))) {
+            return originalCursorDescriptor.set?.call(this, `url('/pink-cursor.png') 0 0, crosshair`)
+          }
           if (value && !value.includes('pink-cursor.png') && value !== 'none') {
             return originalCursorDescriptor.set?.call(this, cursorStyle)
           }
@@ -178,6 +207,8 @@ export function CursorTest() {
       document.removeEventListener('mouseover', handleMouseEvent, true)
       document.removeEventListener('mouseenter', handleMouseEvent, true)
       document.removeEventListener('mouseleave', handleMouseEvent, true)
+      document.removeEventListener('mousedown', handleMouseEvent, true)
+      document.removeEventListener('mouseup', handleMouseEvent, true)
       // Restore original methods
       CSSStyleDeclaration.prototype.setProperty = originalSetProperty
       if (originalCursorDescriptor) {

@@ -210,23 +210,23 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       }
     }, [currentTool, stampCursorUrl, imageCursorUrl])
 
-    // Disable Fabric.js cursor management completely
+    // Completely disable and override Fabric.js cursor management
     useEffect(() => {
       const canvas = fabricRef.current
       if (!canvas) return
 
-      // Tell Fabric.js to inherit cursor from CSS
+      // Disable ALL Fabric.js cursor management
       canvas.defaultCursor = 'inherit'
       canvas.hoverCursor = 'inherit'
       canvas.moveCursor = 'inherit'
       canvas.rotationCursor = 'inherit'
       canvas.freeDrawingCursor = 'inherit'
 
-      // Override Fabric.js cursor to use custom cursor
+      // Completely override setCursor method
       const originalSetCursor = (canvas as any).setCursor
       if (originalSetCursor) {
         (canvas as any).setCursor = function() {
-          // Always use custom cursor
+          // NEVER allow Fabric.js to set cursor - always use pink
           if (this.upperCanvasEl) {
             this.upperCanvasEl.style.setProperty('cursor', `url('/pink-cursor.png') 0 0, crosshair`, 'important')
           }
@@ -236,7 +236,7 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
         }
       }
 
-      // Force custom cursor on canvas elements
+      // Force cursor function
       const forceCursor = () => {
         if (canvas.upperCanvasEl) {
           canvas.upperCanvasEl.style.setProperty('cursor', `url('/pink-cursor.png') 0 0, crosshair`, 'important')
@@ -246,15 +246,20 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
         }
       }
 
+      // Apply immediately
       forceCursor()
 
-      // Override on all canvas events
-      const events = ['mouse:move', 'mouse:down', 'mouse:up', 'mouse:over', 'mouse:out', 'object:moving']
+      // Force on ALL canvas events - catch everything
+      const events = ['mouse:move', 'mouse:down', 'mouse:up', 'mouse:over', 'mouse:out', 'mouse:wheel', 'object:moving', 'object:modified', 'object:scaling', 'object:rotating', 'path:created', 'selection:created', 'selection:updated']
       events.forEach(eventName => {
         canvas.on(eventName as any, forceCursor)
       })
 
+      // Also use interval as backup
+      const cursorInterval = setInterval(forceCursor, 33) // ~30fps
+
       return () => {
+        clearInterval(cursorInterval)
         events.forEach(eventName => {
           canvas.off(eventName as any, forceCursor)
         })
