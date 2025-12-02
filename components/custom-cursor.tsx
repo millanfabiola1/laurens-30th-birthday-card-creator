@@ -41,41 +41,47 @@ export function CustomCursor() {
       mouseY = e.clientY
     }
 
-    // Hide default cursor on all elements
-    const hideDefaultCursor = () => {
-      document.body.style.cursor = 'none'
-      document.documentElement.style.cursor = 'none'
-      
-      // Hide cursor on all existing elements
-      const allElements = document.querySelectorAll('*')
-      allElements.forEach((el) => {
-        const htmlEl = el as HTMLElement
-        if (htmlEl.style) {
-          htmlEl.style.cursor = 'none'
-        }
-      })
-      
-      // Specifically target canvas elements
+    // Hide default cursor - use CSS instead of querying all elements
+    document.body.style.cursor = 'none'
+    document.documentElement.style.cursor = 'none'
+    
+    // Only hide cursor on canvas elements specifically
+    const hideCanvasCursor = () => {
       const canvases = document.querySelectorAll('canvas, .upper-canvas, .lower-canvas')
       canvases.forEach((canvas) => {
         const canvasEl = canvas as HTMLElement
-        canvasEl.style.cursor = 'none'
-        canvasEl.style.setProperty('cursor', 'none', 'important')
+        if (canvasEl.style) {
+          canvasEl.style.cursor = 'none'
+          canvasEl.style.setProperty('cursor', 'none', 'important')
+        }
       })
     }
     
-    hideDefaultCursor()
+    hideCanvasCursor()
     
-    // Watch for new elements and hide cursor on them too
-    const observer = new MutationObserver(() => {
-      hideDefaultCursor()
+    // Watch for new canvas elements only (less intensive)
+    const observer = new MutationObserver((mutations) => {
+      let hasNewCanvas = false
+      mutations.forEach(mutation => {
+        if (mutation.type === 'childList') {
+          mutation.addedNodes.forEach(node => {
+            if (node.nodeType === 1) {
+              const el = node as HTMLElement
+              if (el.tagName === 'CANVAS' || el.classList.contains('upper-canvas') || el.classList.contains('lower-canvas')) {
+                hasNewCanvas = true
+              }
+            }
+          })
+        }
+      })
+      if (hasNewCanvas) {
+        hideCanvasCursor()
+      }
     })
     
     observer.observe(document.documentElement, {
       childList: true,
       subtree: true,
-      attributes: true,
-      attributeFilter: ['style'],
     })
 
     // Start cursor animation
