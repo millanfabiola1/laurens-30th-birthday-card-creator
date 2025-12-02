@@ -210,7 +210,7 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       }
     }, [currentTool, stampCursorUrl, imageCursorUrl])
 
-    // Disable Fabric.js cursor management - let CSS handle it
+    // Disable Fabric.js cursor management completely
     useEffect(() => {
       const canvas = fabricRef.current
       if (!canvas) return
@@ -221,6 +221,46 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       canvas.moveCursor = 'inherit'
       canvas.rotationCursor = 'inherit'
       canvas.freeDrawingCursor = 'inherit'
+
+      // Disable cursor rendering completely
+      const originalSetCursor = (canvas as any).setCursor
+      if (originalSetCursor) {
+        (canvas as any).setCursor = function() {
+          // Override to do nothing - let CSS handle it
+          if (this.upperCanvasEl) {
+            this.upperCanvasEl.style.cursor = `url('/pink-cursor.png') 16 16, auto`
+            this.upperCanvasEl.style.setProperty('cursor', `url('/pink-cursor.png') 16 16, auto`, 'important')
+          }
+          if (this.lowerCanvasEl) {
+            this.lowerCanvasEl.style.cursor = `url('/pink-cursor.png') 16 16, auto`
+            this.lowerCanvasEl.style.setProperty('cursor', `url('/pink-cursor.png') 16 16, auto`, 'important')
+          }
+        }
+      }
+
+      // Force cursor on canvas elements
+      const forceCursor = () => {
+        if (canvas.upperCanvasEl) {
+          canvas.upperCanvasEl.style.setProperty('cursor', `url('/pink-cursor.png') 16 16, auto`, 'important')
+        }
+        if (canvas.lowerCanvasEl) {
+          canvas.lowerCanvasEl.style.setProperty('cursor', `url('/pink-cursor.png') 16 16, auto`, 'important')
+        }
+      }
+
+      forceCursor()
+
+      // Override on all canvas events
+      const events = ['mouse:move', 'mouse:down', 'mouse:up', 'mouse:over', 'mouse:out', 'object:moving']
+      events.forEach(eventName => {
+        canvas.on(eventName as any, forceCursor)
+      })
+
+      return () => {
+        events.forEach(eventName => {
+          canvas.off(eventName as any, forceCursor)
+        })
+      }
     }, [isReady])
 
     // Update selected text color when currentColor changes

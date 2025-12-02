@@ -7,6 +7,43 @@ export function CursorTest() {
     const cursorUrl = '/pink-cursor.png'
     const cursorStyle = `url('${cursorUrl}') 16 16, auto`
 
+    // Patch Fabric.js canvas methods that set cursors
+    const patchFabricCanvas = () => {
+      // Wait for Fabric to be available
+      if (typeof window !== 'undefined' && (window as any).fabric) {
+        const fabric = (window as any).fabric
+        if (fabric.Canvas) {
+          const originalSetCursor = fabric.Canvas.prototype.setCursor
+          fabric.Canvas.prototype.setCursor = function(cursor: string) {
+            // Override any cursor setting with our custom cursor
+            if (originalSetCursor) {
+              originalSetCursor.call(this, cursorStyle)
+            } else if (this.upperCanvasEl) {
+              this.upperCanvasEl.style.cursor = cursorStyle
+            }
+          }
+
+          // Patch renderCursor method
+          const originalRenderCursor = fabric.Canvas.prototype.renderCursor
+          if (originalRenderCursor) {
+            fabric.Canvas.prototype.renderCursor = function() {
+              // Just set our cursor instead
+              if (this.upperCanvasEl) {
+                this.upperCanvasEl.style.cursor = cursorStyle
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Try to patch immediately
+    patchFabricCanvas()
+
+    // Also try after a delay in case Fabric loads later
+    setTimeout(patchFabricCanvas, 1000)
+    setTimeout(patchFabricCanvas, 3000)
+
     // Preload cursor image
     const img = new Image()
     img.src = cursorUrl
