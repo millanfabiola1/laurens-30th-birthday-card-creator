@@ -210,68 +210,17 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       }
     }, [currentTool, stampCursorUrl, imageCursorUrl])
 
-    // Update Fabric.js canvas cursor - continuously enforce pink cursor
+    // Disable Fabric.js cursor management - let CSS handle it
     useEffect(() => {
       const canvas = fabricRef.current
       if (!canvas) return
 
-      // Disable Fabric.js cursor management entirely
+      // Tell Fabric.js to inherit cursor from CSS
       canvas.defaultCursor = 'inherit'
       canvas.hoverCursor = 'inherit'
       canvas.moveCursor = 'inherit'
       canvas.rotationCursor = 'inherit'
       canvas.freeDrawingCursor = 'inherit'
-
-      // Continuously enforce cursor on canvas elements
-      const enforceCursor = () => {
-        const upperCanvas = canvas.upperCanvasEl
-        const lowerCanvas = canvas.lowerCanvasEl
-        const containerEl = canvas.getElement().parentElement
-
-        if (upperCanvas) {
-          upperCanvas.style.cursor = `url('/pink-cursor.png') 16 16, auto`
-          upperCanvas.style.setProperty('cursor', `url('/pink-cursor.png') 16 16, auto`, 'important')
-        }
-        if (lowerCanvas) {
-          lowerCanvas.style.cursor = `url('/pink-cursor.png') 16 16, auto`
-          lowerCanvas.style.setProperty('cursor', `url('/pink-cursor.png') 16 16, auto`, 'important')
-        }
-        if (containerEl) {
-          containerEl.style.cursor = `url('/pink-cursor.png') 16 16, auto`
-          containerEl.style.setProperty('cursor', `url('/pink-cursor.png') 16 16, auto`, 'important')
-        }
-      }
-
-      // Apply immediately
-      enforceCursor()
-
-      // Less aggressive interval - every 500ms instead of 50ms
-      const interval = setInterval(enforceCursor, 500)
-
-      // Throttle event handlers to reduce overhead
-      let eventTimeout: NodeJS.Timeout | null = null
-      const throttledEnforce = () => {
-        if (eventTimeout) return
-        eventTimeout = setTimeout(() => {
-          enforceCursor()
-          eventTimeout = null
-        }, 100)
-      }
-
-      // Also enforce on canvas events (throttled)
-      canvas.on('mouse:move', throttledEnforce)
-      canvas.on('mouse:down', enforceCursor)
-      canvas.on('mouse:up', enforceCursor)
-      canvas.on('mouse:over', throttledEnforce)
-
-      return () => {
-        clearInterval(interval)
-        if (eventTimeout) clearTimeout(eventTimeout)
-        canvas.off('mouse:move', throttledEnforce)
-        canvas.off('mouse:down', enforceCursor)
-        canvas.off('mouse:up', enforceCursor)
-        canvas.off('mouse:over', throttledEnforce)
-      }
     }, [isReady])
 
     // Update selected text color when currentColor changes

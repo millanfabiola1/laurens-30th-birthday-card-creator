@@ -464,187 +464,28 @@ html, body {
 }
 
 /* ============================================
-   CUSTOM PINK CURSOR - FORCE EVERYWHERE
+   CUSTOM CURSOR - SIMPLE IMPLEMENTATION
    ============================================ */
 
-/* Explicitly set cursor on html and body first */
+/* Set cursor on root elements */
 html,
-body,
-html *,
-body * {
+body {
   cursor: url('/pink-cursor.png') 16 16, auto !important;
 }
 
-/* Base pink cursor for everything - ALL STATES */
-*, *::before, *::after {
+/* Apply to all elements and pseudo-elements */
+*,
+*::before,
+*::after {
   cursor: url('/pink-cursor.png') 16 16, auto !important;
 }
 
-/* All hover states use pink cursor */
+/* Ensure all states use the cursor */
 *:hover,
-*:hover::before,
-*:hover::after {
-  cursor: url('/pink-cursor.png') 16 16, auto !important;
-}
-
-/* All active states use pink cursor */
 *:active,
-*:active::before,
-*:active::after {
-  cursor: url('/pink-cursor.png') 16 16, auto !important;
-}
-
-/* All focus states use pink cursor */
 *:focus,
-*:focus::before,
-*:focus::after {
-  cursor: url('/pink-cursor.png') 16 16, auto !important;
-}
-
-/* All visited states use pink cursor */
-*:visited {
-  cursor: url('/pink-cursor.png') 16 16, auto !important;
-}
-
-/* All disabled states use pink cursor */
-*:disabled,
-*:disabled:hover,
-*:disabled:active {
-  cursor: url('/pink-cursor.png') 16 16, auto !important;
-}
-
-/* Fabric.js canvases - target both lower and upper canvas with maximum specificity */
-.canvas-container,
-.canvas-container *,
-.canvas-container *::before,
-.canvas-container *::after,
-.canvas-container canvas,
-.canvas-container canvas:hover,
-.canvas-container canvas:active,
-.canvas-container canvas:focus,
-.upper-canvas,
-.upper-canvas:hover,
-.upper-canvas:active,
-.upper-canvas:focus,
-.lower-canvas,
-.lower-canvas:hover,
-.lower-canvas:active,
-.lower-canvas:focus,
-canvas.upper-canvas,
-canvas.lower-canvas,
-div.upper-canvas,
-div.lower-canvas {
-  cursor: url('/pink-cursor.png') 16 16, auto !important;
-}
-
-/* Force cursor on all canvas-related elements that might be dynamically created */
-[class*="canvas"],
-[class*="Canvas"],
-[class*="upper"],
-[class*="lower"] {
-  cursor: url('/pink-cursor.png') 16 16, auto !important;
-}
-
-/* Override ALL tool cursors - they all use pink now */
-[data-cursor="crosshair"], 
-[data-cursor="crosshair"] *,
-[data-cursor="crosshair"]:hover,
-[data-cursor="crosshair"]:active,
-[data-cursor="crosshair"] ~ .upper-canvas,
-[data-cursor="stamp"],
-[data-cursor="stamp"] *,
-[data-cursor="stamp"]:hover,
-[data-cursor="stamp"]:active,
-[data-cursor="stamp"] ~ .upper-canvas,
-[data-cursor="image"],
-[data-cursor="image"] *,
-[data-cursor="image"]:hover,
-[data-cursor="image"]:active,
-[data-cursor="image"] ~ .upper-canvas,
-[data-cursor="pink"],
-[data-cursor="pink"] *,
-[data-cursor="pink"]:hover,
-[data-cursor="pink"]:active,
-[data-cursor="pink"] ~ .upper-canvas {
-  cursor: url('/pink-cursor.png') 16 16, auto !important;
-}
-
-/* Override ALL Tailwind cursor utilities */
-.cursor-pointer,
-.cursor-pointer:hover,
-.cursor-pointer:active,
-.cursor-default,
-.cursor-default:hover,
-.cursor-default:active,
-.cursor-grab,
-.cursor-grab:hover,
-.cursor-grab:active,
-.cursor-grabbing,
-.cursor-grabbing:hover,
-.cursor-grabbing:active,
-.cursor-move,
-.cursor-move:hover,
-.cursor-move:active,
-.cursor-text,
-.cursor-text:hover,
-.cursor-text:active,
-.cursor-wait,
-.cursor-wait:hover,
-.cursor-wait:active,
-.cursor-help,
-.cursor-help:hover,
-.cursor-help:active,
-.cursor-not-allowed,
-.cursor-not-allowed:hover,
-.cursor-not-allowed:active,
-.cursor-crosshair,
-.cursor-crosshair:hover,
-.cursor-crosshair:active,
-.cursor-alias,
-.cursor-alias:hover,
-.cursor-alias:active,
-.cursor-copy,
-.cursor-copy:hover,
-.cursor-copy:active,
-.cursor-no-drop,
-.cursor-no-drop:hover,
-.cursor-no-drop:active,
-.cursor-zoom-in,
-.cursor-zoom-in:hover,
-.cursor-zoom-in:active,
-.cursor-zoom-out,
-.cursor-zoom-out:hover,
-.cursor-zoom-out:active {
-  cursor: url('/pink-cursor.png') 16 16, auto !important;
-}
-
-/* Buttons, links, and interactive elements */
-button,
-button:hover,
-button:active,
-button:focus,
-button:disabled,
-a,
-a:hover,
-a:active,
-a:focus,
-a:visited,
-[role="button"],
-[role="button"]:hover,
-[role="button"]:active,
-[role="button"]:focus,
-input,
-input:hover,
-input:active,
-input:focus,
-textarea,
-textarea:hover,
-textarea:active,
-textarea:focus,
-select,
-select:hover,
-select:active,
-select:focus {
+*:visited,
+*:disabled {
   cursor: url('/pink-cursor.png') 16 16, auto !important;
 }
 
@@ -688,16 +529,10 @@ select:focus {
 
 /* Drag handle visual feedback */
 .drag-handle {
-  cursor: url('/pink-cursor.png') 16 16, auto !important;
   transition: background-color 0.2s ease;
 }
 
-.drag-handle:hover {
-  cursor: url('/pink-cursor.png') 16 16, auto !important;
-}
-
 .drag-handle:active {
-  cursor: url('/pink-cursor.png') 16 16, auto !important;
   background-color: rgba(255, 20, 147, 0.3);
 }
 
