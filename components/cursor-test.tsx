@@ -71,16 +71,12 @@ export function CursorTest() {
       forceCursorOnElement(document.body)
       
       // Force on canvas elements specifically (Fabric.js creates these)
-      const canvases = document.querySelectorAll('canvas, .upper-canvas, .lower-canvas, .canvas-container')
-      canvases.forEach(canvas => {
+      const canvasElements = document.querySelectorAll('canvas, .upper-canvas, .lower-canvas, .canvas-container')
+      canvasElements.forEach(canvas => {
         forceCursorOnElement(canvas as HTMLElement)
-      })
-
-      // Force on canvas elements that might have overridden cursor
-      const canvases = document.querySelectorAll('canvas, .upper-canvas, .lower-canvas')
-      canvases.forEach(el => {
-        const htmlEl = el as HTMLElement
-        if (htmlEl.style && htmlEl.style.cursor && !htmlEl.style.cursor.includes('cursor.png')) {
+        // Check if cursor was overridden
+        const htmlEl = canvas as HTMLElement
+        if (htmlEl.style && htmlEl.style.cursor && !htmlEl.style.cursor.includes('cursor.png') && htmlEl.style.cursor !== 'none') {
           forceCursorOnElement(htmlEl)
         }
       })
