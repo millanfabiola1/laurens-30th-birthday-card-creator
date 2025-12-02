@@ -158,6 +158,17 @@ export default function TopBar({ onHelpClick, canvasRef }: TopBarProps) {
 
     let hasStarted = false
     let randomStartSet = false
+    
+    // Try to play immediately (may be blocked by browser autoplay policy)
+    const tryImmediatePlay = async () => {
+      try {
+        await audio.play()
+        hasStarted = true
+      } catch (err) {
+        // Browser blocked autoplay - will retry on user interaction
+      }
+    }
+    tryImmediatePlay()
 
     // Function to set random start position
     const setRandomStart = () => {
