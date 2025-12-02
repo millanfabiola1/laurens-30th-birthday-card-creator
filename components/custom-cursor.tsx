@@ -41,61 +41,87 @@ export function CustomCursor() {
       mouseY = e.clientY
     }
 
-    // Hide default cursor - use CSS instead of querying all elements
-    document.body.style.cursor = 'none'
-    document.documentElement.style.cursor = 'none'
-    
-    // Only hide cursor on canvas elements specifically
-    const hideCanvasCursor = () => {
-      const canvases = document.querySelectorAll('canvas, .upper-canvas, .lower-canvas')
+    // Aggressively hide default cursor everywhere
+    const hideAllCursors = () => {
+      // Set on html and body
+      document.body.style.setProperty('cursor', 'none', 'important')
+      document.documentElement.style.setProperty('cursor', 'none', 'important')
+      
+      // Set on all canvas elements
+      const canvases = document.querySelectorAll('canvas, .upper-canvas, .lower-canvas, .canvas-container')
       canvases.forEach((canvas) => {
         const canvasEl = canvas as HTMLElement
-        if (canvasEl.style) {
-          canvasEl.style.cursor = 'none'
-          canvasEl.style.setProperty('cursor', 'none', 'important')
-        }
+        canvasEl.style.setProperty('cursor', 'none', 'important')
       })
     }
     
-    hideCanvasCursor()
+    // Apply immediately
+    hideAllCursors()
     
-    // Watch for new canvas elements only (less intensive)
+    // Use a more aggressive interval to constantly hide cursors
+    const cursorInterval = setInterval(() => {
+      hideAllCursors()
+    }, 100)
+    
+    // Watch for style attribute changes and immediately hide cursor
     const observer = new MutationObserver((mutations) => {
-      let hasNewCanvas = false
       mutations.forEach(mutation => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+          const target = mutation.target as HTMLElement
+          if (target && target.style && target.style.cursor && target.style.cursor !== 'none') {
+            target.style.setProperty('cursor', 'none', 'important')
+          }
+        }
         if (mutation.type === 'childList') {
           mutation.addedNodes.forEach(node => {
             if (node.nodeType === 1) {
               const el = node as HTMLElement
-              if (el.tagName === 'CANVAS' || el.classList.contains('upper-canvas') || el.classList.contains('lower-canvas')) {
-                hasNewCanvas = true
+              if (el.style) {
+                el.style.setProperty('cursor', 'none', 'important')
               }
+              // Check children too
+              const children = el.querySelectorAll('*')
+              children.forEach(child => {
+                (child as HTMLElement).style.setProperty('cursor', 'none', 'important')
+              })
             }
           })
         }
       })
-      if (hasNewCanvas) {
-        hideCanvasCursor()
-      }
+      hideAllCursors()
     })
     
     observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['style'],
       childList: true,
       subtree: true,
     })
+    
+    // Intercept cursor style changes
+    const originalSetProperty = CSSStyleDeclaration.prototype.setProperty
+    CSSStyleDeclaration.prototype.setProperty = function(property: string, value: string | null, priority?: string) {
+      if (property === 'cursor' && value && value !== 'none') {
+        return originalSetProperty.call(this, 'cursor', 'none', 'important')
+      }
+      return originalSetProperty.call(this, property, value, priority)
+    }
 
     // Start cursor animation
     updateCursor()
     document.addEventListener('mousemove', handleMouseMove)
 
     return () => {
+      clearInterval(cursorInterval)
+      observer.disconnect()
       if (document.body.contains(cursor)) {
         document.body.removeChild(cursor)
       }
-      observer.disconnect()
       document.body.style.cursor = ''
       document.documentElement.style.cursor = ''
       document.removeEventListener('mousemove', handleMouseMove)
+      // Restore original setProperty
+      CSSStyleDeclaration.prototype.setProperty = originalSetProperty
     }
   }, [])
 
