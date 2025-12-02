@@ -245,25 +245,32 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       // Apply immediately
       enforceCursor()
 
-      // Set up interval to continuously enforce
-      const interval = setInterval(enforceCursor, 50)
+      // Less aggressive interval - every 500ms instead of 50ms
+      const interval = setInterval(enforceCursor, 500)
 
-      // Also enforce on canvas events
-      canvas.on('mouse:move', enforceCursor)
+      // Throttle event handlers to reduce overhead
+      let eventTimeout: NodeJS.Timeout | null = null
+      const throttledEnforce = () => {
+        if (eventTimeout) return
+        eventTimeout = setTimeout(() => {
+          enforceCursor()
+          eventTimeout = null
+        }, 100)
+      }
+
+      // Also enforce on canvas events (throttled)
+      canvas.on('mouse:move', throttledEnforce)
       canvas.on('mouse:down', enforceCursor)
       canvas.on('mouse:up', enforceCursor)
-      canvas.on('mouse:over', enforceCursor)
-      canvas.on('object:moving', enforceCursor)
-      canvas.on('object:modified', enforceCursor)
+      canvas.on('mouse:over', throttledEnforce)
 
       return () => {
         clearInterval(interval)
-        canvas.off('mouse:move', enforceCursor)
+        if (eventTimeout) clearTimeout(eventTimeout)
+        canvas.off('mouse:move', throttledEnforce)
         canvas.off('mouse:down', enforceCursor)
         canvas.off('mouse:up', enforceCursor)
-        canvas.off('mouse:over', enforceCursor)
-        canvas.off('object:moving', enforceCursor)
-        canvas.off('object:modified', enforceCursor)
+        canvas.off('mouse:over', throttledEnforce)
       }
     }, [isReady])
 

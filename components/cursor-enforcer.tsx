@@ -7,70 +7,101 @@ const CURSOR_STYLE = `url('${CURSOR_URL}') 16 16, auto`
 
 export function CursorEnforcer() {
   useEffect(() => {
-    // Function to force cursor on all elements
+    // Track elements we've already processed to avoid unnecessary work
+    const processedElements = new WeakSet<HTMLElement>()
+    
+    // Function to force cursor on specific elements (optimized)
+    const forceCursorOnElement = (el: HTMLElement) => {
+      if (processedElements.has(el)) return
+      
+      if (el.style) {
+        const currentCursor = el.style.cursor || window.getComputedStyle(el).cursor
+        // Only update if it's not already our cursor
+        if (!currentCursor.includes('pink-cursor.png')) {
+          el.style.setProperty('cursor', CURSOR_STYLE, 'important')
+          processedElements.add(el)
+        }
+      }
+    }
+
+    // Optimized function - only target specific elements
     const forceCursor = () => {
       // Force cursor on document body and html
       if (document.documentElement) {
-        document.documentElement.style.cursor = CURSOR_STYLE
+        document.documentElement.style.setProperty('cursor', CURSOR_STYLE, 'important')
       }
       if (document.body) {
-        document.body.style.cursor = CURSOR_STYLE
+        document.body.style.setProperty('cursor', CURSOR_STYLE, 'important')
       }
 
-      // Force cursor on all elements, including dynamically added ones
-      const allElements = document.querySelectorAll('*')
-      allElements.forEach((el) => {
-        const htmlEl = el as HTMLElement
-        if (htmlEl.style) {
-          htmlEl.style.cursor = CURSOR_STYLE
-        }
+      // Only target canvas elements and interactive elements (much faster)
+      const canvases = document.querySelectorAll('canvas, .upper-canvas, .lower-canvas')
+      canvases.forEach((canvas) => {
+        forceCursorOnElement(canvas as HTMLElement)
       })
 
-      // Specifically target canvas elements and Fabric.js upper/lower canvas
-      const canvases = document.querySelectorAll('canvas, .upper-canvas, .lower-canvas, .canvas-container')
-      canvases.forEach((canvas) => {
-        const canvasEl = canvas as HTMLElement
-        canvasEl.style.cursor = CURSOR_STYLE
-        // Also set on hover state via CSS
-        canvasEl.style.setProperty('cursor', CURSOR_STYLE, 'important')
+      // Target interactive elements
+      const interactive = document.querySelectorAll('button, a, input, select, textarea, [role="button"], [onclick]')
+      interactive.forEach((el) => {
+        forceCursorOnElement(el as HTMLElement)
       })
     }
 
     // Apply immediately
     forceCursor()
 
-    // Use MutationObserver to watch for DOM changes
+    // Use MutationObserver with throttling
+    let observerTimeout: NodeJS.Timeout | null = null
     const observer = new MutationObserver(() => {
-      forceCursor()
+      // Throttle observer callbacks
+      if (observerTimeout) return
+      observerTimeout = setTimeout(() => {
+        forceCursor()
+        observerTimeout = null
+      }, 200)
     })
 
-    // Observe changes to the entire document
+    // Observe changes but only for added nodes and style changes
     observer.observe(document.documentElement, {
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ['style', 'class'],
+      attributeFilter: ['style'],
     })
 
-    // Also force cursor periodically as a backup
-    const interval = setInterval(forceCursor, 100)
+    // Less aggressive interval - only every 500ms
+    const interval = setInterval(forceCursor, 500)
 
-    // Watch for mouse events to reapply cursor
-    const mouseHandler = () => {
-      forceCursor()
+    // Throttled mouse handler
+    let mouseTimeout: NodeJS.Timeout | null = null
+    const mouseHandler = (e: MouseEvent) => {
+      if (mouseTimeout) return
+      mouseTimeout = setTimeout(() => {
+        const target = e.target as HTMLElement
+        if (target) {
+          forceCursorOnElement(target)
+          // Also handle parent elements
+          let parent = target.parentElement
+          let depth = 0
+          while (parent && depth < 3) {
+            forceCursorOnElement(parent)
+            parent = parent.parentElement
+            depth++
+          }
+        }
+        mouseTimeout = null
+      }, 100)
     }
 
-    document.addEventListener('mousemove', mouseHandler, true)
-    document.addEventListener('mouseenter', mouseHandler, true)
-    document.addEventListener('mouseleave', mouseHandler, true)
-    document.addEventListener('mouseover', mouseHandler, true)
+    document.addEventListener('mousemove', mouseHandler, { passive: true, capture: true })
+    document.addEventListener('mouseover', mouseHandler, { passive: true, capture: true })
 
     return () => {
       observer.disconnect()
       clearInterval(interval)
+      if (observerTimeout) clearTimeout(observerTimeout)
+      if (mouseTimeout) clearTimeout(mouseTimeout)
       document.removeEventListener('mousemove', mouseHandler, true)
-      document.removeEventListener('mouseenter', mouseHandler, true)
-      document.removeEventListener('mouseleave', mouseHandler, true)
       document.removeEventListener('mouseover', mouseHandler, true)
     }
   }, [])
