@@ -4,8 +4,8 @@ import { useEffect } from 'react'
 
 export function CursorTest() {
   useEffect(() => {
-    const cursorUrl = '/cursor.png'
-    const cursorStyle = `url('${cursorUrl}') 16 16, auto`
+    const cursorUrl = '/pink-cursor.png'
+    const cursorStyle = `url('${cursorUrl}') 0 0, auto`
 
     // Patch Fabric.js canvas methods that set cursors
     const patchFabricCanvas = () => {
@@ -19,7 +19,7 @@ export function CursorTest() {
             if (originalSetCursor) {
               originalSetCursor.call(this, cursorStyle)
             } else if (this.upperCanvasEl) {
-              this.upperCanvasEl.style.cursor = cursorStyle
+              this.upperCanvasEl.style.cursor = `url('${cursorUrl}') 0 0, crosshair`
             }
           }
 
@@ -29,7 +29,7 @@ export function CursorTest() {
             fabric.Canvas.prototype.renderCursor = function() {
               // Just set our cursor instead
               if (this.upperCanvasEl) {
-                this.upperCanvasEl.style.cursor = cursorStyle
+                this.upperCanvasEl.style.cursor = `url('${cursorUrl}') 0 0, crosshair`
               }
             }
           }
@@ -60,7 +60,7 @@ export function CursorTest() {
       // Use setProperty with important flag
       el.style.setProperty('cursor', cursorStyle, 'important')
       // Also try direct assignment as fallback
-      if (el.style.cursor && !el.style.cursor.includes('pink-cursor')) {
+      if (el.style.cursor && !el.style.cursor.includes('pink-cursor.png')) {
         el.style.cursor = cursorStyle
       }
     }
@@ -76,8 +76,8 @@ export function CursorTest() {
         forceCursorOnElement(canvas as HTMLElement)
         // Check if cursor was overridden
         const htmlEl = canvas as HTMLElement
-        if (htmlEl.style && htmlEl.style.cursor && !htmlEl.style.cursor.includes('cursor.png') && htmlEl.style.cursor !== 'none') {
-          forceCursorOnElement(htmlEl)
+        if (htmlEl.style && htmlEl.style.cursor && !htmlEl.style.cursor.includes('pink-cursor.png') && htmlEl.style.cursor !== 'none') {
+          htmlEl.style.cursor = `url('${cursorUrl}') 0 0, crosshair`
         }
       })
     }
@@ -115,7 +115,7 @@ export function CursorTest() {
         if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
           const target = mutation.target as HTMLElement
           if (target && target.style && target.style.cursor) {
-            if (!target.style.cursor.includes('cursor.png') && target.style.cursor !== 'none') {
+            if (!target.style.cursor.includes('pink-cursor.png') && target.style.cursor !== 'none') {
               shouldReapply = true
               forceCursorOnElement(target)
             }
@@ -146,7 +146,7 @@ export function CursorTest() {
     // Intercept style.cursor assignments - override immediately
     const originalSetProperty = CSSStyleDeclaration.prototype.setProperty
     CSSStyleDeclaration.prototype.setProperty = function(property: string, value: string | null, priority?: string) {
-      if (property === 'cursor' && value && !value.includes('cursor.png') && value !== 'none') {
+      if (property === 'cursor' && value && !value.includes('pink-cursor.png') && value !== 'none') {
         // Immediately override with our cursor
         return originalSetProperty.call(this, 'cursor', cursorStyle, 'important')
       }
@@ -161,7 +161,7 @@ export function CursorTest() {
           return originalCursorDescriptor.get?.call(this) || ''
         },
         set(value: string) {
-          if (value && !value.includes('cursor.png') && value !== 'none') {
+          if (value && !value.includes('pink-cursor.png') && value !== 'none') {
             return originalCursorDescriptor.set?.call(this, cursorStyle)
           }
           return originalCursorDescriptor.set?.call(this, value)

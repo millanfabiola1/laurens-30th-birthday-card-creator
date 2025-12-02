@@ -650,3 +650,24 @@ select:focus,
     background: white !important;
   }
 }
+
+/* ============================================
+   PINK CUSTOM CURSOR - GLOBAL
+   ============================================ */
+
+html,
+body {
+  cursor: url('/pink-cursor.png') 0 0, auto;
+}
+
+canvas {
+  cursor: url('/pink-cursor.png') 0 0, crosshair;
+}
+
+a,
+button,
+[role="button"],
+input,
+textarea {
+  cursor: url('/pink-cursor.png') 0 0, pointer;
+}

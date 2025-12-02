@@ -228,10 +228,10 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
         (canvas as any).setCursor = function() {
           // Always use custom cursor
           if (this.upperCanvasEl) {
-            this.upperCanvasEl.style.setProperty('cursor', `url('/cursor.png') 16 16, auto`, 'important')
+            this.upperCanvasEl.style.setProperty('cursor', `url('/pink-cursor.png') 0 0, crosshair`, 'important')
           }
           if (this.lowerCanvasEl) {
-            this.lowerCanvasEl.style.setProperty('cursor', `url('/cursor.png') 16 16, auto`, 'important')
+            this.lowerCanvasEl.style.setProperty('cursor', `url('/pink-cursor.png') 0 0, crosshair`, 'important')
           }
         }
       }
@@ -239,10 +239,10 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       // Force custom cursor on canvas elements
       const forceCursor = () => {
         if (canvas.upperCanvasEl) {
-          canvas.upperCanvasEl.style.setProperty('cursor', `url('/cursor.png') 16 16, auto`, 'important')
+          canvas.upperCanvasEl.style.setProperty('cursor', `url('/pink-cursor.png') 0 0, crosshair`, 'important')
         }
         if (canvas.lowerCanvasEl) {
-          canvas.lowerCanvasEl.style.setProperty('cursor', `url('/cursor.png') 16 16, auto`, 'important')
+          canvas.lowerCanvasEl.style.setProperty('cursor', `url('/pink-cursor.png') 0 0, crosshair`, 'important')
         }
       }
 
