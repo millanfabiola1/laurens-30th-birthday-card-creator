@@ -41,16 +41,52 @@ export function CustomCursor() {
       mouseY = e.clientY
     }
 
-    // Hide default cursor
-    document.body.style.cursor = 'none'
-    document.documentElement.style.cursor = 'none'
+    // Hide default cursor on all elements
+    const hideDefaultCursor = () => {
+      document.body.style.cursor = 'none'
+      document.documentElement.style.cursor = 'none'
+      
+      // Hide cursor on all existing elements
+      const allElements = document.querySelectorAll('*')
+      allElements.forEach((el) => {
+        const htmlEl = el as HTMLElement
+        if (htmlEl.style) {
+          htmlEl.style.cursor = 'none'
+        }
+      })
+      
+      // Specifically target canvas elements
+      const canvases = document.querySelectorAll('canvas, .upper-canvas, .lower-canvas')
+      canvases.forEach((canvas) => {
+        const canvasEl = canvas as HTMLElement
+        canvasEl.style.cursor = 'none'
+        canvasEl.style.setProperty('cursor', 'none', 'important')
+      })
+    }
+    
+    hideDefaultCursor()
+    
+    // Watch for new elements and hide cursor on them too
+    const observer = new MutationObserver(() => {
+      hideDefaultCursor()
+    })
+    
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['style'],
+    })
 
     // Start cursor animation
     updateCursor()
     document.addEventListener('mousemove', handleMouseMove)
 
     return () => {
-      document.body.removeChild(cursor)
+      if (document.body.contains(cursor)) {
+        document.body.removeChild(cursor)
+      }
+      observer.disconnect()
       document.body.style.cursor = ''
       document.documentElement.style.cursor = ''
       document.removeEventListener('mousemove', handleMouseMove)

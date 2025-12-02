@@ -464,24 +464,33 @@ html, body {
 }
 
 /* ============================================
-   CUSTOM CURSOR - SIMPLE IMPLEMENTATION
+   HIDE DEFAULT CURSOR - Using custom cursor element
    ============================================ */
 
-/* Set cursor on root elements */
+/* Hide default cursor on all elements */
 html,
-body {
-  cursor: url('/pink-cursor.png') 16 16, auto !important;
-}
-
-/* Apply to all elements */
-* {
-  cursor: inherit !important;
+body,
+*,
+*::before,
+*::after {
+  cursor: none !important;
 }
 
 *:hover,
 *:active,
-*:focus {
-  cursor: inherit !important;
+*:focus,
+*:visited,
+*:disabled {
+  cursor: none !important;
+}
+
+/* Canvas elements */
+canvas,
+.upper-canvas,
+.lower-canvas,
+.canvas-container,
+.canvas-container * {
+  cursor: none !important;
 }
 
 /* ============================================
