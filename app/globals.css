@@ -464,86 +464,8 @@ html, body {
 }
 
 /* ============================================
-   CUSTOM CURSOR - Site-wide
+   OLD CURSOR RULES REMOVED - See bottom of file
    ============================================ */
-
-/* Set custom cursor on all elements */
-html,
-body,
-*,
-*::before,
-*::after {
-  cursor: url('/cursor.png') 16 16, auto !important;
-}
-
-/* All interactive states */
-*:hover,
-*:active,
-*:focus,
-*:visited,
-*:disabled {
-  cursor: url('/cursor.png') 16 16, auto !important;
-}
-
-/* Canvas elements - ensure cursor works here too */
-canvas,
-.upper-canvas,
-.lower-canvas,
-.canvas-container,
-.canvas-container *,
-.canvas-container canvas,
-.canvas-container canvas:hover,
-.canvas-container canvas:active {
-  cursor: url('/cursor.png') 16 16, auto !important;
-}
-
-/* Buttons and interactive elements */
-button,
-button:hover,
-button:active,
-button:focus,
-a,
-a:hover,
-a:active,
-a:focus,
-input,
-input:hover,
-input:focus,
-textarea,
-textarea:hover,
-textarea:focus,
-select,
-select:hover,
-select:focus,
-[role="button"],
-[role="button"]:hover,
-[role="button"]:active {
-  cursor: url('/cursor.png') 16 16, auto !important;
-}
-
-/* Tool cursors - still use custom cursor */
-[data-cursor="crosshair"],
-[data-cursor="crosshair"] *,
-[data-cursor="stamp"],
-[data-cursor="stamp"] *,
-[data-cursor="image"],
-[data-cursor="image"] *,
-[data-cursor="pink"],
-[data-cursor="pink"] * {
-  cursor: url('/cursor.png') 16 16, auto !important;
-}
-
-/* Tailwind cursor utilities - override to use custom cursor */
-.cursor-pointer,
-.cursor-default,
-.cursor-grab,
-.cursor-grabbing,
-.cursor-move,
-.cursor-text,
-.cursor-crosshair,
-.cursor-not-allowed {
-  cursor: url('/cursor.png') 16 16, auto !important;
-}
 
 /* ============================================
    RESPONSIVE BREAKPOINT UTILITIES
@@ -656,12 +578,15 @@ select:focus,
    ============================================ */
 
 html,
-body {
-  cursor: url('/pink-cursor.png') 0 0, auto;
+body,
+* {
+  cursor: url('/pink-cursor.png') 0 0, auto !important;
 }
 
-canvas {
-  cursor: url('/pink-cursor.png') 0 0, crosshair;
+canvas,
+.upper-canvas,
+.lower-canvas {
+  cursor: url('/pink-cursor.png') 0 0, crosshair !important;
 }
 
 a,
@@ -669,5 +594,5 @@ button,
 [role="button"],
 input,
 textarea {
-  cursor: url('/pink-cursor.png') 0 0, pointer;
+  cursor: url('/pink-cursor.png') 0 0, pointer !important;
 }
