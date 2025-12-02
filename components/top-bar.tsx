@@ -189,6 +189,14 @@ export default function TopBar({ onHelpClick, canvasRef }: TopBarProps) {
       if (audio.duration && !randomStartSet) {
         setRandomStart()
       }
+      // Try to play immediately when metadata is ready
+      if (!hasStarted && !isMuted && audio.duration) {
+        audio.play().then(() => {
+          hasStarted = true
+        }).catch(() => {
+          // Will retry on user interaction
+        })
+      }
     }
 
     // Try to play when ready
@@ -198,13 +206,41 @@ export default function TopBar({ onHelpClick, canvasRef }: TopBarProps) {
         if (!randomStartSet) {
           setRandomStart()
         }
-        audio.play().catch((err) => {
-          // Autoplay prevented - will play on user interaction
-          console.log('Audio autoplay prevented, waiting for user interaction:', err)
-        })
-        hasStarted = true
+        // Try autoplay with multiple strategies
+        const tryPlay = async () => {
+          try {
+            await audio.play()
+            hasStarted = true
+          } catch (err) {
+            console.log('Audio autoplay prevented, trying workaround:', err)
+            // Workaround: try to play after a small delay or on any user interaction
+            const playOnInteraction = () => {
+              audio.play().catch(() => {})
+              hasStarted = true
+              document.removeEventListener('click', playOnInteraction, true)
+              document.removeEventListener('touchstart', playOnInteraction, true)
+              document.removeEventListener('keydown', playOnInteraction, true)
+            }
+            document.addEventListener('click', playOnInteraction, { once: true, capture: true })
+            document.addEventListener('touchstart', playOnInteraction, { once: true, capture: true })
+            document.addEventListener('keydown', playOnInteraction, { once: true, capture: true })
+          }
+        }
+        tryPlay()
       }
     }
+
+    // Also try to play immediately when metadata loads
+    audio.addEventListener('loadedmetadata', () => {
+      if (!hasStarted && !isMuted && audio.duration) {
+        if (!randomStartSet) {
+          setRandomStart()
+        }
+        audio.play().catch(() => {
+          // Will try again on user interaction
+        })
+      }
+    })
 
     // Handle when track ends - restart from random position
     const handleEnded = () => {
