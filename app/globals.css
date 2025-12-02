@@ -467,42 +467,50 @@ html, body {
    CUSTOM PINK CURSOR - FORCE EVERYWHERE
    ============================================ */
 
+/* Explicitly set cursor on html and body first */
+html,
+body,
+html *,
+body * {
+  cursor: url('/pink-cursor.png') 16 16, auto !important;
+}
+
 /* Base pink cursor for everything - ALL STATES */
 *, *::before, *::after {
-  cursor: url('/pink-cursor.png') 0 0, auto !important;
+  cursor: url('/pink-cursor.png') 16 16, auto !important;
 }
 
 /* All hover states use pink cursor */
 *:hover,
 *:hover::before,
 *:hover::after {
-  cursor: url('/pink-cursor.png') 0 0, auto !important;
+  cursor: url('/pink-cursor.png') 16 16, auto !important;
 }
 
 /* All active states use pink cursor */
 *:active,
 *:active::before,
 *:active::after {
-  cursor: url('/pink-cursor.png') 0 0, auto !important;
+  cursor: url('/pink-cursor.png') 16 16, auto !important;
 }
 
 /* All focus states use pink cursor */
 *:focus,
 *:focus::before,
 *:focus::after {
-  cursor: url('/pink-cursor.png') 0 0, auto !important;
+  cursor: url('/pink-cursor.png') 16 16, auto !important;
 }
 
 /* All visited states use pink cursor */
 *:visited {
-  cursor: url('/pink-cursor.png') 0 0, auto !important;
+  cursor: url('/pink-cursor.png') 16 16, auto !important;
 }
 
 /* All disabled states use pink cursor */
 *:disabled,
 *:disabled:hover,
 *:disabled:active {
-  cursor: url('/pink-cursor.png') 0 0, auto !important;
+  cursor: url('/pink-cursor.png') 16 16, auto !important;
 }
 
 /* Fabric.js canvases - target both lower and upper canvas */
@@ -517,7 +525,7 @@ html, body {
 .lower-canvas,
 .lower-canvas:hover,
 .lower-canvas:active {
-  cursor: url('/pink-cursor.png') 0 0, auto !important;
+  cursor: url('/pink-cursor.png') 16 16, auto !important;
 }
 
 /* Override ALL tool cursors - they all use pink now */
@@ -541,7 +549,7 @@ html, body {
 [data-cursor="pink"]:hover,
 [data-cursor="pink"]:active,
 [data-cursor="pink"] ~ .upper-canvas {
-  cursor: url('/pink-cursor.png') 0 0, auto !important;
+  cursor: url('/pink-cursor.png') 16 16, auto !important;
 }
 
 /* Override ALL Tailwind cursor utilities */
@@ -590,7 +598,7 @@ html, body {
 .cursor-zoom-out,
 .cursor-zoom-out:hover,
 .cursor-zoom-out:active {
-  cursor: url('/pink-cursor.png') 0 0, auto !important;
+  cursor: url('/pink-cursor.png') 16 16, auto !important;
 }
 
 /* Buttons, links, and interactive elements */
@@ -620,7 +628,7 @@ select,
 select:hover,
 select:active,
 select:focus {
-  cursor: url('/pink-cursor.png') 0 0, auto !important;
+  cursor: url('/pink-cursor.png') 16 16, auto !important;
 }
 
 /* ============================================
@@ -663,16 +671,16 @@ select:focus {
 
 /* Drag handle visual feedback */
 .drag-handle {
-  cursor: url('/pink-cursor.png') 0 0, auto !important;
+  cursor: url('/pink-cursor.png') 16 16, auto !important;
   transition: background-color 0.2s ease;
 }
 
 .drag-handle:hover {
-  cursor: url('/pink-cursor.png') 0 0, auto !important;
+  cursor: url('/pink-cursor.png') 16 16, auto !important;
 }
 
 .drag-handle:active {
-  cursor: url('/pink-cursor.png') 0 0, auto !important;
+  cursor: url('/pink-cursor.png') 16 16, auto !important;
   background-color: rgba(255, 20, 147, 0.3);
 }
 
