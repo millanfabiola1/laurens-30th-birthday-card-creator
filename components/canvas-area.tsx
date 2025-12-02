@@ -210,60 +210,17 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       }
     }, [currentTool, stampCursorUrl, imageCursorUrl])
 
-    // Completely disable and override Fabric.js cursor management
+    // Disable Fabric.js cursor management - let browser handle it
     useEffect(() => {
       const canvas = fabricRef.current
       if (!canvas) return
 
-      // Disable ALL Fabric.js cursor management
-      canvas.defaultCursor = 'inherit'
-      canvas.hoverCursor = 'inherit'
-      canvas.moveCursor = 'inherit'
-      canvas.rotationCursor = 'inherit'
-      canvas.freeDrawingCursor = 'inherit'
-
-      // Completely override setCursor method
-      const originalSetCursor = (canvas as any).setCursor
-      if (originalSetCursor) {
-        (canvas as any).setCursor = function() {
-          // NEVER allow Fabric.js to set cursor - always use pink
-          if (this.upperCanvasEl) {
-            this.upperCanvasEl.style.setProperty('cursor', `url('/pink-cursor.png') 0 0, crosshair`, 'important')
-          }
-          if (this.lowerCanvasEl) {
-            this.lowerCanvasEl.style.setProperty('cursor', `url('/pink-cursor.png') 0 0, crosshair`, 'important')
-          }
-        }
-      }
-
-      // Force cursor function
-      const forceCursor = () => {
-        if (canvas.upperCanvasEl) {
-          canvas.upperCanvasEl.style.setProperty('cursor', `url('/pink-cursor.png') 0 0, crosshair`, 'important')
-        }
-        if (canvas.lowerCanvasEl) {
-          canvas.lowerCanvasEl.style.setProperty('cursor', `url('/pink-cursor.png') 0 0, crosshair`, 'important')
-        }
-      }
-
-      // Apply immediately
-      forceCursor()
-
-      // Force on ALL canvas events - catch everything
-      const events = ['mouse:move', 'mouse:down', 'mouse:up', 'mouse:over', 'mouse:out', 'mouse:wheel', 'object:moving', 'object:modified', 'object:scaling', 'object:rotating', 'path:created', 'selection:created', 'selection:updated']
-      events.forEach(eventName => {
-        canvas.on(eventName as any, forceCursor)
-      })
-
-      // Also use interval as backup
-      const cursorInterval = setInterval(forceCursor, 33) // ~30fps
-
-      return () => {
-        clearInterval(cursorInterval)
-        events.forEach(eventName => {
-          canvas.off(eventName as any, forceCursor)
-        })
-      }
+      // Let Fabric.js use default cursors
+      canvas.defaultCursor = 'default'
+      canvas.hoverCursor = 'move'
+      canvas.moveCursor = 'move'
+      canvas.rotationCursor = 'crosshair'
+      canvas.freeDrawingCursor = 'crosshair'
     }, [isReady])
 
     // Update selected text color when currentColor changes

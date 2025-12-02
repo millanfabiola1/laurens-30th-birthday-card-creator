@@ -2,7 +2,6 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Pixelify_Sans, Bagel_Fat_One, Imperial_Script, Instrument_Serif } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
-import { CursorTest } from "@/components/cursor-test"
 import "./globals.css"
 
 const pixelifySans = Pixelify_Sans({
@@ -92,7 +91,6 @@ export default function RootLayout({
       <body
         className={`${pixelifySans.variable} ${bagelFatOne.variable} ${imperialScript.variable} ${instrumentSerif.variable} font-sans antialiased overflow-hidden`}
       >
-        <CursorTest />
         {children}
         <Analytics />
       </body>

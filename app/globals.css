@@ -463,9 +463,6 @@ html, body {
   overscroll-behavior-y: contain;
 }
 
-/* ============================================
-   OLD CURSOR RULES REMOVED - See bottom of file
-   ============================================ */
 
 /* ============================================
    RESPONSIVE BREAKPOINT UTILITIES
@@ -573,26 +570,3 @@ html, body {
   }
 }
 
-/* ============================================
-   PINK CUSTOM CURSOR - GLOBAL
-   ============================================ */
-
-html,
-body,
-* {
-  cursor: url('/pink-cursor.png') 0 0, auto !important;
-}
-
-canvas,
-.upper-canvas,
-.lower-canvas {
-  cursor: url('/pink-cursor.png') 0 0, crosshair !important;
-}
-
-a,
-button,
-[role="button"],
-input,
-textarea {
-  cursor: url('/pink-cursor.png') 0 0, pointer !important;
-}
