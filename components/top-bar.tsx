@@ -170,8 +170,22 @@ export default function TopBar({ onHelpClick, canvasRef }: TopBarProps) {
       return 0
     }
 
+    // Error handling
+    const handleError = (e: Event) => {
+      const error = e.target as HTMLAudioElement
+      console.error('Audio loading error:', {
+        error: error.error,
+        code: error.error?.code,
+        message: error.error?.message,
+        networkState: error.networkState,
+        readyState: error.readyState,
+        src: error.src
+      })
+    }
+
     // Set random start position when metadata is loaded
     const handleLoadedMetadata = () => {
+      console.log('Audio metadata loaded, duration:', audio.duration)
       if (audio.duration && !randomStartSet) {
         setRandomStart()
       }
@@ -179,13 +193,14 @@ export default function TopBar({ onHelpClick, canvasRef }: TopBarProps) {
 
     // Try to play when ready
     const handleCanPlay = () => {
+      console.log('Audio can play, duration:', audio.duration)
       if (!hasStarted && !isMuted && audio.duration) {
         if (!randomStartSet) {
           setRandomStart()
         }
         audio.play().catch((err) => {
           // Autoplay prevented - will play on user interaction
-          console.log('Audio autoplay prevented, waiting for user interaction')
+          console.log('Audio autoplay prevented, waiting for user interaction:', err)
         })
         hasStarted = true
       }
@@ -199,6 +214,7 @@ export default function TopBar({ onHelpClick, canvasRef }: TopBarProps) {
       }
     }
 
+    audio.addEventListener('error', handleError)
     audio.addEventListener('loadedmetadata', handleLoadedMetadata)
     audio.addEventListener('canplaythrough', handleCanPlay)
     audio.addEventListener('ended', handleEnded)
@@ -207,6 +223,7 @@ export default function TopBar({ onHelpClick, canvasRef }: TopBarProps) {
     audio.load()
 
     return () => {
+      audio.removeEventListener('error', handleError)
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
       audio.removeEventListener('canplaythrough', handleCanPlay)
       audio.removeEventListener('ended', handleEnded)
