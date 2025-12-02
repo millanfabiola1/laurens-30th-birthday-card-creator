@@ -222,29 +222,27 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       canvas.rotationCursor = 'inherit'
       canvas.freeDrawingCursor = 'inherit'
 
-      // Disable cursor rendering completely
+      // Override Fabric.js cursor to use custom cursor
       const originalSetCursor = (canvas as any).setCursor
       if (originalSetCursor) {
         (canvas as any).setCursor = function() {
-          // Override to do nothing - let CSS handle it
+          // Always use custom cursor
           if (this.upperCanvasEl) {
-            this.upperCanvasEl.style.cursor = `url('/pink-cursor.png') 16 16, auto`
-            this.upperCanvasEl.style.setProperty('cursor', `url('/pink-cursor.png') 16 16, auto`, 'important')
+            this.upperCanvasEl.style.setProperty('cursor', `url('/cursor.png') 16 16, auto`, 'important')
           }
           if (this.lowerCanvasEl) {
-            this.lowerCanvasEl.style.cursor = `url('/pink-cursor.png') 16 16, auto`
-            this.lowerCanvasEl.style.setProperty('cursor', `url('/pink-cursor.png') 16 16, auto`, 'important')
+            this.lowerCanvasEl.style.setProperty('cursor', `url('/cursor.png') 16 16, auto`, 'important')
           }
         }
       }
 
-      // Force cursor on canvas elements
+      // Force custom cursor on canvas elements
       const forceCursor = () => {
         if (canvas.upperCanvasEl) {
-          canvas.upperCanvasEl.style.setProperty('cursor', `url('/pink-cursor.png') 16 16, auto`, 'important')
+          canvas.upperCanvasEl.style.setProperty('cursor', `url('/cursor.png') 16 16, auto`, 'important')
         }
         if (canvas.lowerCanvasEl) {
-          canvas.lowerCanvasEl.style.setProperty('cursor', `url('/pink-cursor.png') 16 16, auto`, 'important')
+          canvas.lowerCanvasEl.style.setProperty('cursor', `url('/cursor.png') 16 16, auto`, 'important')
         }
       }
 

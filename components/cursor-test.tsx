@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 
 export function CursorTest() {
   useEffect(() => {
-    const cursorUrl = '/pink-cursor.png'
+    const cursorUrl = '/cursor.png'
     const cursorStyle = `url('${cursorUrl}') 16 16, auto`
 
     // Patch Fabric.js canvas methods that set cursors
@@ -76,11 +76,11 @@ export function CursorTest() {
         forceCursorOnElement(canvas as HTMLElement)
       })
 
-      // Force on all elements that have a style
-      const allElements = document.querySelectorAll('*')
-      allElements.forEach(el => {
+      // Force on canvas elements that might have overridden cursor
+      const canvases = document.querySelectorAll('canvas, .upper-canvas, .lower-canvas')
+      canvases.forEach(el => {
         const htmlEl = el as HTMLElement
-        if (htmlEl.style && htmlEl.style.cursor && !htmlEl.style.cursor.includes('pink-cursor')) {
+        if (htmlEl.style && htmlEl.style.cursor && !htmlEl.style.cursor.includes('cursor.png')) {
           forceCursorOnElement(htmlEl)
         }
       })
@@ -89,10 +89,10 @@ export function CursorTest() {
     // Apply immediately
     applyCursor()
 
-    // Very frequent interval to catch Fabric.js cursor changes
+    // Periodic check to catch Fabric.js cursor changes (less frequent)
     const interval = setInterval(() => {
       applyCursor()
-    }, 16) // ~60fps - check every frame
+    }, 200) // Check every 200ms
 
     // Intercept ALL mouse events and reapply cursor immediately
     const handleMouseEvent = (e: MouseEvent) => {
@@ -119,7 +119,7 @@ export function CursorTest() {
         if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
           const target = mutation.target as HTMLElement
           if (target && target.style && target.style.cursor) {
-            if (!target.style.cursor.includes('pink-cursor')) {
+            if (!target.style.cursor.includes('cursor.png') && target.style.cursor !== 'none') {
               shouldReapply = true
               forceCursorOnElement(target)
             }
@@ -150,7 +150,7 @@ export function CursorTest() {
     // Intercept style.cursor assignments - override immediately
     const originalSetProperty = CSSStyleDeclaration.prototype.setProperty
     CSSStyleDeclaration.prototype.setProperty = function(property: string, value: string | null, priority?: string) {
-      if (property === 'cursor' && value && !value.includes('pink-cursor.png')) {
+      if (property === 'cursor' && value && !value.includes('cursor.png') && value !== 'none') {
         // Immediately override with our cursor
         return originalSetProperty.call(this, 'cursor', cursorStyle, 'important')
       }
@@ -165,7 +165,7 @@ export function CursorTest() {
           return originalCursorDescriptor.get?.call(this) || ''
         },
         set(value: string) {
-          if (value && !value.includes('pink-cursor.png')) {
+          if (value && !value.includes('cursor.png') && value !== 'none') {
             return originalCursorDescriptor.set?.call(this, cursorStyle)
           }
           return originalCursorDescriptor.set?.call(this, value)
