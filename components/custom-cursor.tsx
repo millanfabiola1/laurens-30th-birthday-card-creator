@@ -41,87 +41,51 @@ export function CustomCursor() {
       mouseY = e.clientY
     }
 
-    // Aggressively hide default cursor everywhere
-    const hideAllCursors = () => {
-      // Set on html and body
-      document.body.style.setProperty('cursor', 'none', 'important')
-      document.documentElement.style.setProperty('cursor', 'none', 'important')
-      
-      // Set on all canvas elements
-      const canvases = document.querySelectorAll('canvas, .upper-canvas, .lower-canvas, .canvas-container')
+    // Hide default cursor - simple approach
+    document.body.style.cursor = 'none'
+    document.documentElement.style.cursor = 'none'
+    
+    // Hide cursor on canvas elements when they're created
+    const hideCanvasCursor = () => {
+      const canvases = document.querySelectorAll('canvas, .upper-canvas, .lower-canvas')
       canvases.forEach((canvas) => {
         const canvasEl = canvas as HTMLElement
-        canvasEl.style.setProperty('cursor', 'none', 'important')
+        if (canvasEl.style) {
+          canvasEl.style.cursor = 'none'
+        }
       })
     }
     
-    // Apply immediately
-    hideAllCursors()
+    hideCanvasCursor()
     
-    // Use a more aggressive interval to constantly hide cursors
-    const cursorInterval = setInterval(() => {
-      hideAllCursors()
-    }, 100)
-    
-    // Watch for style attribute changes and immediately hide cursor
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach(mutation => {
-        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-          const target = mutation.target as HTMLElement
-          if (target && target.style && target.style.cursor && target.style.cursor !== 'none') {
-            target.style.setProperty('cursor', 'none', 'important')
-          }
-        }
-        if (mutation.type === 'childList') {
-          mutation.addedNodes.forEach(node => {
-            if (node.nodeType === 1) {
-              const el = node as HTMLElement
-              if (el.style) {
-                el.style.setProperty('cursor', 'none', 'important')
-              }
-              // Check children too
-              const children = el.querySelectorAll('*')
-              children.forEach(child => {
-                (child as HTMLElement).style.setProperty('cursor', 'none', 'important')
-              })
-            }
-          })
-        }
-      })
-      hideAllCursors()
+    // Watch for new canvas elements (throttled)
+    let observerTimeout: NodeJS.Timeout | null = null
+    const observer = new MutationObserver(() => {
+      if (observerTimeout) return
+      observerTimeout = setTimeout(() => {
+        hideCanvasCursor()
+        observerTimeout = null
+      }, 200)
     })
     
     observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['style'],
       childList: true,
       subtree: true,
     })
-    
-    // Intercept cursor style changes
-    const originalSetProperty = CSSStyleDeclaration.prototype.setProperty
-    CSSStyleDeclaration.prototype.setProperty = function(property: string, value: string | null, priority?: string) {
-      if (property === 'cursor' && value && value !== 'none') {
-        return originalSetProperty.call(this, 'cursor', 'none', 'important')
-      }
-      return originalSetProperty.call(this, property, value, priority)
-    }
 
     // Start cursor animation
     updateCursor()
     document.addEventListener('mousemove', handleMouseMove)
 
     return () => {
-      clearInterval(cursorInterval)
       observer.disconnect()
+      if (observerTimeout) clearTimeout(observerTimeout)
       if (document.body.contains(cursor)) {
         document.body.removeChild(cursor)
       }
       document.body.style.cursor = ''
       document.documentElement.style.cursor = ''
       document.removeEventListener('mousemove', handleMouseMove)
-      // Restore original setProperty
-      CSSStyleDeclaration.prototype.setProperty = originalSetProperty
     }
   }, [])
 
