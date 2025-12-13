@@ -74,7 +74,6 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
     const fabricRef = useRef<Canvas | null>(null)
     const [isReady, setIsReady] = useState(false)
     const [stampCursorUrl, setStampCursorUrl] = useState<string>('')
-    const [imageCursorUrl, setImageCursorUrl] = useState<string>('')
     const [showStartFreshButton, setShowStartFreshButton] = useState(true)
     
     // Store default stamps for easy removal when background changes
@@ -158,70 +157,34 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       img.src = currentStamp
     }, [currentTool, currentStamp])
 
-    // Generate cursor image for images tool
-    useEffect(() => {
-      if (currentTool !== 'images' || !currentImageStamp) {
-        setImageCursorUrl('')
-        return
-      }
-
-      // Create a small canvas to resize the image for cursor use
-      const cursorSize = 32 // Browser cursor size limit
-      const img = new Image()
-      img.crossOrigin = 'anonymous'
-      
-      img.onload = () => {
-        const canvas = document.createElement('canvas')
-        canvas.width = cursorSize
-        canvas.height = cursorSize
-        const ctx = canvas.getContext('2d')
-        if (ctx) {
-          // Draw the image scaled to cursor size
-          ctx.drawImage(img, 0, 0, cursorSize, cursorSize)
-          setImageCursorUrl(canvas.toDataURL('image/png'))
-        }
-      }
-      
-      img.onerror = () => {
-        setImageCursorUrl('')
-      }
-      
-      img.src = currentImageStamp
-    }, [currentTool, currentImageStamp])
-
-    // Determine cursor type for data attribute
-    const getCursorType = useCallback(() => {
-      if (currentTool === 'stamp' && stampCursorUrl) return 'stamp'
-      if (currentTool === 'images' && imageCursorUrl) return 'image'
-      if (currentTool === 'stamp' || currentTool === 'images') return 'crosshair'
-      if (currentTool === 'brush' || currentTool === 'eraser') return 'crosshair'
-      if (currentTool === 'fill') return 'crosshair'
-      return 'pink' // default pink cursor
-    }, [currentTool, stampCursorUrl, imageCursorUrl])
-
-    const cursorType = getCursorType()
-    
-    // Update CSS variable for stamp/image cursor preview
-    useEffect(() => {
-      if (currentTool === 'stamp' && stampCursorUrl) {
-        document.documentElement.style.setProperty('--stamp-cursor', `url(${stampCursorUrl}) 16 16, crosshair`)
-      } else if (currentTool === 'images' && imageCursorUrl) {
-        document.documentElement.style.setProperty('--image-cursor', `url(${imageCursorUrl}) 16 16, crosshair`)
-      }
-    }, [currentTool, stampCursorUrl, imageCursorUrl])
-
-    // Disable Fabric.js cursor management - let browser handle it
+    // Update Fabric.js canvas cursor when stamp cursor changes
     useEffect(() => {
       const canvas = fabricRef.current
       if (!canvas) return
 
-      // Let Fabric.js use default cursors
-      canvas.defaultCursor = 'default'
-      canvas.hoverCursor = 'move'
-      canvas.moveCursor = 'move'
-      canvas.rotationCursor = 'crosshair'
-      canvas.freeDrawingCursor = 'crosshair'
-    }, [isReady])
+      if (currentTool === 'stamp' && stampCursorUrl) {
+        const cursorStyle = `url(${stampCursorUrl}) 16 16, crosshair`
+        canvas.defaultCursor = cursorStyle
+        canvas.hoverCursor = cursorStyle
+        // Also set on the upper canvas element directly
+        const upperCanvas = canvas.upperCanvasEl
+        if (upperCanvas) {
+          upperCanvas.style.cursor = cursorStyle
+        }
+      } else if (currentTool === 'stamp' || currentTool === 'images') {
+        canvas.defaultCursor = 'crosshair'
+        canvas.hoverCursor = 'crosshair'
+      } else if (currentTool === 'brush' || currentTool === 'eraser') {
+        canvas.defaultCursor = 'crosshair'
+        canvas.hoverCursor = 'crosshair'
+      } else if (currentTool === 'fill') {
+        canvas.defaultCursor = 'crosshair'
+        canvas.hoverCursor = 'crosshair'
+      } else {
+        canvas.defaultCursor = 'default'
+        canvas.hoverCursor = 'move'
+      }
+    }, [currentTool, stampCursorUrl, isReady])
 
     // Update selected text color when currentColor changes
     useEffect(() => {
@@ -239,6 +202,35 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
         }
       }
     }, [currentColor, isReady])
+
+    // Helper function to ensure background objects stay locked and at the back
+    const ensureBackgroundLockedRef = useRef<() => void>(() => {})
+    const ensureBackgroundLocked = useCallback(() => {
+      const canvas = fabricRef.current
+      if (!canvas) return
+      
+      const backgroundObjects = canvas.getObjects().filter((obj: any) => obj.isBackgroundRect)
+      backgroundObjects.forEach((bgObj) => {
+        // Send to back
+        canvas.sendObjectToBack(bgObj)
+        // Lock all properties
+        bgObj.set({
+          selectable: false,
+          evented: false,
+          lockMovementX: true,
+          lockMovementY: true,
+          lockRotation: true,
+          lockScalingX: true,
+          lockScalingY: true,
+          hasControls: false,
+          hasBorders: false,
+        })
+      })
+    }, [])
+    
+    useEffect(() => {
+      ensureBackgroundLockedRef.current = ensureBackgroundLocked
+    }, [ensureBackgroundLocked])
 
     // Shared function to completely clear the canvas - used by both "New Design" and first background change
     const clearCanvasCompletely = useCallback(() => {
@@ -527,6 +519,13 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
 
       // Event listeners
       canvas.on('mouse:down', (opt) => {
+        // Prevent any interaction with background objects
+        if (opt.target && (opt.target as any).isBackgroundRect) {
+          canvas.discardActiveObject()
+          canvas.renderAll()
+          return
+        }
+        
         // Notify parent that canvas was interacted with (to close drawer)
         onCanvasInteractionRef.current?.()
         
@@ -1148,13 +1147,39 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
 
       canvas.on('selection:created', (e) => {
         const selected = e.selected?.[0]
+        // Prevent background objects from being selected
+        if (selected && (selected as any).isBackgroundRect) {
+          canvas.discardActiveObject()
+          canvas.renderAll()
+          return
+        }
         if (selected && (selected as any).customId) {
           setSelectedElementId((selected as any).customId)
         }
       })
 
+      canvas.on('object:selected', (e) => {
+        const obj = e.target
+        // Prevent background objects from being selected
+        if (obj && (obj as any).isBackgroundRect) {
+          canvas.discardActiveObject()
+          canvas.renderAll()
+          return
+        }
+      })
+
       canvas.on('selection:cleared', () => {
         setSelectedElementId(null)
+      })
+
+      // Ensure background objects stay at the back whenever objects are added
+      canvas.on('object:added', () => {
+        ensureBackgroundLockedRef.current()
+      })
+
+      // Also ensure background stays locked after rendering
+      canvas.on('after:render', () => {
+        ensureBackgroundLockedRef.current()
       })
 
       return () => {
@@ -1189,15 +1214,6 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
           
           const canvasWidth = canvas.width || 800
           const canvasHeight = canvas.height || 600
-          
-          // Calculate responsive stamp size for mobile/tablet
-          const isMobileOrTablet = canvasWidth < 1024
-          const baseCanvasWidth = 800
-          const scaleFactor = isMobileOrTablet 
-            ? Math.min(canvasWidth / baseCanvasWidth, canvasHeight / 600)
-            : 1
-          const baseStampSize = 48
-          const stampSize = Math.max(24, baseStampSize * scaleFactor) // Minimum 24px for visibility
           
           // Get original image dimensions (try multiple methods for reliability)
           let originalWidth = img.width || 1
@@ -1277,9 +1293,10 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
               }
               
               const stampPath = `/stamps/kidpix-spritesheet-0-${stampNum}.png`
+              const stampSize = 48 // Fixed size for first-time visitor stamps
               
-              // Random position on canvas (with some padding from edges - scaled for mobile)
-              const padding = Math.max(20, 50 * scaleFactor)
+              // Random position on canvas (with some padding from edges)
+              const padding = 50
               const x = Math.random() * (canvasWidth - padding * 2) + padding
               const y = Math.random() * (canvasHeight - padding * 2) + padding
               
@@ -1317,7 +1334,7 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
                   hasBorders: true,
                   cornerColor: '#ff1493',
                   cornerStyle: 'circle',
-                  cornerSize: Math.max(8, 12 * scaleFactor), // Scale corner size for mobile
+                  cornerSize: 12,
                   borderColor: '#ff1493',
                   transparentCorners: false,
                   lockUniScaling: false,
@@ -1596,6 +1613,9 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
 
           canvas.add(fabricImg)
           canvas.bringObjectToFront(fabricImg)
+          // Ensure background stays at back
+          const bgObjects = canvas.getObjects().filter((obj: any) => obj.isBackgroundRect)
+          bgObjects.forEach((bg) => canvas.sendObjectToBack(bg))
           canvas.renderAll()
           playSound('stamp')
         }).catch((err) => {
@@ -2007,6 +2027,14 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       { id: 'purple', value: '/backgrounds/Purple.png', label: 'Purple', type: 'image' as const },
       { id: 'rainbow-cloud', value: '/backgrounds/Rainbow-Cloud.png', label: 'Rainbow Cloud', type: 'image' as const },
       { id: 'rosey-wallpaper', value: '/backgrounds/Rosey-Wallpaper.png', label: 'Rosey', type: 'image' as const },
+      { id: 'chromatic', value: '/backgrounds/chromatic.png', label: 'Chromatic', type: 'image' as const },
+      { id: 'pink-aquarium', value: '/backgrounds/pink-aquarium.png', label: 'Pink Aquarium', type: 'image' as const },
+      { id: 'sunset-orange', value: '/backgrounds/sunset-orange.png', label: 'Sunset Orange', type: 'image' as const },
+      { id: 'ethereal-blue', value: '/backgrounds/ethereal-blue.png', label: 'Ethereal Blue', type: 'image' as const },
+      { id: 'blue-stars', value: '/backgrounds/blue-stars.jpg', label: 'Blue Stars', type: 'image' as const },
+      { id: 'tropical-beach', value: '/backgrounds/tropical-beach.jpg', label: 'Tropical Beach', type: 'image' as const },
+      { id: 'tropical', value: '/backgrounds/tropical.jpg', label: 'Tropical', type: 'image' as const },
+      { id: 'pink-bubbles', value: '/backgrounds/pink-bubbles.jpg', label: 'Pink Bubbles', type: 'image' as const },
     ], [])
 
     // Close background picker when clicking outside
@@ -2144,29 +2172,34 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
     const currentBg = backgrounds.find(bg => bg.value === currentBackground) || backgrounds[0]
 
     return (
-      <MacWindow className="flex-1 relative overflow-hidden h-full">
+      <MacWindow className="flex-1 relative overflow-hidden h-full rounded-lg sm:rounded-xl">
         <div 
           ref={containerRef} 
-          className="relative w-full h-full gpu-accelerated"
+          className="relative w-full h-full"
           style={{
-            // Ensure proper touch handling for mobile
+            // Ensure proper touch handling
             WebkitUserSelect: 'none',
             userSelect: 'none',
             WebkitTouchCallout: 'none',
-            // Prevent context menu on long press
-            WebkitTapHighlightColor: 'transparent',
           }}
         >
         <canvas
           ref={canvasElRef}
           onClick={handleCanvasClick}
           className="w-full h-full touch-none"
-          data-cursor={cursorType}
           style={{ 
             touchAction: 'none',
             WebkitUserSelect: 'none',
             userSelect: 'none',
-            imageRendering: 'auto',
+            cursor: currentTool === 'stamp' && stampCursorUrl
+              ? `url(${stampCursorUrl}) 16 16, crosshair`
+              : currentTool === 'stamp' || currentTool === 'images'
+                ? 'crosshair' 
+                : currentTool === 'brush' || currentTool === 'eraser'
+                  ? 'crosshair'
+                  : currentTool === 'fill'
+                    ? 'crosshair'
+                    : 'default'
           }}
         />
         

@@ -31,6 +31,14 @@ const backgroundsWithColors = [
   { url: "/backgrounds/Rosey-Wallpaper.png", textColors: ["#4a0080", "#c71585", "#ffffff"] }, // Pink roses - purple/magenta/white
   { url: "/backgrounds/rainbow.png", textColors: ["#ffffff", "#ff1493", "#4a0080"] }, // Rainbow - white/pink/purple
   { url: "/backgrounds/barbie.png", textColors: ["#ffffff", "#ffd700", "#ff69b4"] }, // Barbie pink - white/gold/pink
+  { url: "/backgrounds/chromatic.png", textColors: ["#ffffff", "#ff1493", "#ffd700"] }, // Chromatic - white/pink/gold
+  { url: "/backgrounds/pink-aquarium.png", textColors: ["#ffffff", "#4a0080", "#ff1493"] }, // Pink aquarium - white/purple/pink
+  { url: "/backgrounds/sunset-orange.png", textColors: ["#ffffff", "#4a0080", "#ff1493"] }, // Sunset orange - white/purple/pink
+  { url: "/backgrounds/ethereal-blue.png", textColors: ["#ffffff", "#ffd700", "#ff1493"] }, // Ethereal blue - white/gold/pink
+  { url: "/backgrounds/blue-stars.jpg", textColors: ["#ffffff", "#ffd700", "#ff69b4"] }, // Blue stars - white/gold/pink
+  { url: "/backgrounds/tropical-beach.jpg", textColors: ["#ffffff", "#4a0080", "#ff1493"] }, // Tropical beach - white/purple/pink
+  { url: "/backgrounds/tropical.jpg", textColors: ["#ffffff", "#ff1493", "#4a0080"] }, // Tropical - white/pink/purple
+  { url: "/backgrounds/pink-bubbles.jpg", textColors: ["#4a0080", "#ff1493", "#ffffff"] }, // Pink bubbles - purple/pink/white
 ]
 
 const balloons = [

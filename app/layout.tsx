@@ -29,46 +29,39 @@ const instrumentSerif = Instrument_Serif({
   style: ["normal", "italic"],
 })
 
+// Get base URL from environment variable or use default
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined)
+
 export const metadata: Metadata = {
+  ...(baseUrl && { metadataBase: new URL(baseUrl) }),
   title: "Lauren's 30th Birthday Card Creator",
-  description: "Design a custom card for our Birthday Queen Lauren!",
+  description: "Lauren's Bday Card Maker",
   generator: "v0.app",
   icons: {
     icon: [
       {
-        url: "/favicon.png",
-        type: "image/png",
-        sizes: "64x64",
+        url: "/icon-light-32x32.png",
+        media: "(prefers-color-scheme: light)",
       },
       {
-        url: "/favicon.png",
-        type: "image/png",
-        sizes: "32x32",
+        url: "/icon-dark-32x32.png",
+        media: "(prefers-color-scheme: dark)",
       },
       {
-        url: "/favicon.png",
-        type: "image/png",
-        sizes: "16x16",
+        url: "/icon.svg",
+        type: "image/svg+xml",
       },
     ],
-    apple: [
-      {
-        url: "/favicon.png",
-        sizes: "180x180",
-        type: "image/png",
-      },
-    ],
-    shortcut: "/favicon.png",
+    apple: "/apple-icon.png",
   },
   openGraph: {
     title: "Lauren's 30th Birthday Card Creator",
-    description: "Design a custom card for our Birthday Queen Lauren!",
+    description: "Lauren's Bday Card Maker",
     images: [
       {
         url: "/thumbnail2.png",
-        width: 1200,
-        height: 630,
-        alt: "Lauren's 30th Birthday Card Creator",
+        alt: "Lauren's Bday Card Maker",
       },
     ],
     type: "website",
@@ -76,7 +69,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Lauren's 30th Birthday Card Creator",
-    description: "Design a custom card for our Birthday Queen Lauren!",
+    description: "Lauren's Bday Card Maker",
     images: ["/thumbnail2.png"],
   },
 }

@@ -63,3 +63,4 @@ print(f'Created pink thumbnail at {output_path}')
 
 
 
+

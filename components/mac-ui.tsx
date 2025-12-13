@@ -29,6 +29,7 @@ export const macStyles = {
     height: "14px",
     border: "2px solid #c71585",
     backgroundColor: "#00e5ff",
+    cursor: "pointer",
     boxShadow: "inset -1px -1px 0 0 #008b8b, inset 1px 1px 0 0 #7fffd4",
   } as React.CSSProperties,
 
@@ -39,6 +40,7 @@ export const macStyles = {
     border: "2px solid var(--primary)",
     background: "linear-gradient(180deg, #ffffff 0%, #ffc0e0 50%, #ffb6d9 100%)",
     color: "#4a0033",
+    cursor: "pointer",
     boxShadow: "inset -2px -2px 0 0 #c71585, inset 2px 2px 0 0 #ffffff, 2px 2px 0 0 #c71585",
     textShadow: "1px 1px 0 #ffffff",
   } as React.CSSProperties,
@@ -59,6 +61,7 @@ export const macStyles = {
     border: "2px solid #c71585",
     background: "linear-gradient(180deg, #ff69b4 0%, #ff1493 50%, #c71585 100%)",
     color: "white",
+    cursor: "pointer",
     boxShadow: "2px 2px 0 0 #8b0050, inset -2px -2px 0 0 #c71585, inset 2px 2px 0 0 #ffb6d9",
     textShadow: "1px 1px 0 #8b0050",
   } as React.CSSProperties,
@@ -70,6 +73,7 @@ export const macStyles = {
     border: "2px solid #7c3aed",
     background: "linear-gradient(180deg, #c4b5fd 0%, #a855f7 50%, #7c3aed 100%)",
     color: "white",
+    cursor: "pointer",
     boxShadow: "2px 2px 0 0 #5b21b6, inset -2px -2px 0 0 #7c3aed, inset 2px 2px 0 0 #e9d5ff",
     textShadow: "1px 1px 0 #5b21b6",
   } as React.CSSProperties,
@@ -81,6 +85,7 @@ export const macStyles = {
     border: "2px solid #0891b2",
     background: "linear-gradient(180deg, #a5f3fc 0%, #00e5ff 50%, #0891b2 100%)",
     color: "#004050",
+    cursor: "pointer",
     boxShadow: "2px 2px 0 0 #0e7490, inset -2px -2px 0 0 #0891b2, inset 2px 2px 0 0 #e0f7ff",
     textShadow: "1px 1px 0 #a5f3fc",
   } as React.CSSProperties,
@@ -92,6 +97,7 @@ export const macStyles = {
     alignItems: "center",
     justifyContent: "center",
     fontSize: "20px",
+    cursor: "pointer",
     border: "2px solid var(--primary)",
     background: "linear-gradient(180deg, #ffffff 0%, #ffc0e0 100%)",
     boxShadow: "inset -2px -2px 0 0 #c71585, inset 2px 2px 0 0 #ffffff, 2px 2px 0 0 #c71585",
@@ -113,30 +119,9 @@ export const macStyles = {
     zIndex: 50,
     background: "linear-gradient(180deg, #fff0f7 0%, #ffc0e0 100%)",
     borderTop: "3px solid var(--primary)",
-    boxShadow: "0 -3px 0 0 #c71585, inset -2px -2px 0 0 #ffc0e0, inset 2px 2px 0 0 #ffffff",
-    maxHeight: "65vh",
+    boxShadow: "0 -3px 0 0 #c71585",
+    maxHeight: "45vh",
     overflowY: "auto" as const,
-    WebkitOverflowScrolling: "touch",
-    overscrollBehavior: "contain",
-  } as React.CSSProperties,
-
-  // Touch-optimized tool icon for mobile - matches desktop styling (no rounded corners)
-  toolIconMobile: {
-    width: "48px",
-    height: "48px",
-    minWidth: "44px",
-    minHeight: "44px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "22px",
-    border: "2px solid var(--primary)",
-    background: "linear-gradient(180deg, #ffffff 0%, #ffc0e0 100%)",
-    boxShadow: "inset -2px -2px 0 0 #c71585, inset 2px 2px 0 0 #ffffff, 2px 2px 0 0 #c71585",
-    imageRendering: "pixelated",
-    color: "#4a0033",
-    transition: "transform 0.1s ease-out, box-shadow 0.1s ease-out",
-    WebkitTapHighlightColor: "transparent",
   } as React.CSSProperties,
 }
 
@@ -183,21 +168,15 @@ export function MacWindow({ children, className = "", style = {}, ...props }: Re
 export function ToolIcon({
   children,
   active = false,
-  mobile = false,
   className = "",
   style = {},
   ...props
-}: React.ButtonHTMLAttributes<HTMLButtonElement> & { 
-  active?: boolean
-  mobile?: boolean 
-}) {
-  const baseStyle = mobile ? macStyles.toolIconMobile : macStyles.toolIcon
-  
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & { active?: boolean }) {
   return (
     <button
-      className={`pixel-text touch-target ${className}`}
+      className={`pixel-text ${className}`}
       style={{
-        ...baseStyle,
+        ...macStyles.toolIcon,
         ...(active ? macStyles.toolIconActive : {}),
         ...style,
       }}

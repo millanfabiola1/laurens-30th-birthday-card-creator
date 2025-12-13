@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect, useRef } from "react"
+import { useState } from "react"
 import { MacWindow, MacButton, macStyles } from "./mac-ui"
 import { playSound } from "@/lib/sound-manager"
 import Countdown from "./countdown"
@@ -32,6 +32,14 @@ const backgroundsWithColors = [
   { url: "/backgrounds/Rosey-Wallpaper.png", textColors: ["#4a0080", "#c71585", "#ffffff"] },
   { url: "/backgrounds/rainbow.png", textColors: ["#ffffff", "#ff1493", "#4a0080"] },
   { url: "/backgrounds/barbie.png", textColors: ["#ffffff", "#ffd700", "#ff69b4"] },
+  { url: "/backgrounds/chromatic.png", textColors: ["#ffffff", "#ff1493", "#ffd700"] },
+  { url: "/backgrounds/pink-aquarium.png", textColors: ["#ffffff", "#4a0080", "#ff1493"] },
+  { url: "/backgrounds/sunset-orange.png", textColors: ["#ffffff", "#4a0080", "#ff1493"] },
+  { url: "/backgrounds/ethereal-blue.png", textColors: ["#ffffff", "#ffd700", "#ff1493"] },
+  { url: "/backgrounds/blue-stars.jpg", textColors: ["#ffffff", "#ffd700", "#ff69b4"] },
+  { url: "/backgrounds/tropical-beach.jpg", textColors: ["#ffffff", "#4a0080", "#ff1493"] },
+  { url: "/backgrounds/tropical.jpg", textColors: ["#ffffff", "#ff1493", "#4a0080"] },
+  { url: "/backgrounds/pink-bubbles.jpg", textColors: ["#4a0080", "#ff1493", "#ffffff"] },
 ]
 
 const balloons = [
@@ -145,188 +153,6 @@ const fonts = [
 export default function TopBar({ onHelpClick, canvasRef }: TopBarProps) {
   const [isExporting, setIsExporting] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
-  const [isMuted, setIsMuted] = useState(false)
-  const audioRef = useRef<HTMLAudioElement | null>(null)
-
-  // Setup background music with random start position
-  useEffect(() => {
-    const audio = new Audio('/lauren-mix.mp3')
-    audio.loop = false // We'll handle looping manually to restart from random position
-    audio.volume = 0.2 // Low chill volume (20%)
-    audio.preload = 'auto'
-    audioRef.current = audio
-
-    let hasStarted = false
-    let randomStartSet = false
-    
-    // Try to play immediately (may be blocked by browser autoplay policy)
-    const tryImmediatePlay = async () => {
-      try {
-        await audio.play()
-        hasStarted = true
-      } catch (err) {
-        // Browser blocked autoplay - will retry on user interaction
-      }
-    }
-    tryImmediatePlay()
-
-    // Function to set random start position
-    const setRandomStart = () => {
-      if (audio.duration) {
-        const randomStart = Math.random() * audio.duration * 0.9
-        audio.currentTime = randomStart
-        randomStartSet = true
-        return randomStart
-      }
-      return 0
-    }
-
-    // Error handling
-    const handleError = (e: Event) => {
-      const error = e.target as HTMLAudioElement
-      console.error('Audio loading error:', {
-        error: error.error,
-        code: error.error?.code,
-        message: error.error?.message,
-        networkState: error.networkState,
-        readyState: error.readyState,
-        src: error.src
-      })
-    }
-
-    // Set random start position when metadata is loaded
-    const handleLoadedMetadata = () => {
-      console.log('Audio metadata loaded, duration:', audio.duration)
-      if (audio.duration && !randomStartSet) {
-        setRandomStart()
-      }
-      // Try to play immediately when metadata is ready
-      if (!hasStarted && !isMuted && audio.duration) {
-        audio.play().then(() => {
-          hasStarted = true
-        }).catch(() => {
-          // Will retry on user interaction
-        })
-      }
-    }
-
-    // Try to play when ready
-    const handleCanPlay = () => {
-      console.log('Audio can play, duration:', audio.duration)
-      if (!hasStarted && !isMuted && audio.duration) {
-        if (!randomStartSet) {
-          setRandomStart()
-        }
-        // Try autoplay with multiple strategies
-        const tryPlay = async () => {
-          try {
-            await audio.play()
-            hasStarted = true
-          } catch (err) {
-            console.log('Audio autoplay prevented, trying workaround:', err)
-            // Workaround: try to play after a small delay or on any user interaction
-            const playOnInteraction = () => {
-              audio.play().catch(() => {})
-              hasStarted = true
-              document.removeEventListener('click', playOnInteraction, true)
-              document.removeEventListener('touchstart', playOnInteraction, true)
-              document.removeEventListener('keydown', playOnInteraction, true)
-            }
-            document.addEventListener('click', playOnInteraction, { once: true, capture: true })
-            document.addEventListener('touchstart', playOnInteraction, { once: true, capture: true })
-            document.addEventListener('keydown', playOnInteraction, { once: true, capture: true })
-          }
-        }
-        tryPlay()
-      }
-    }
-
-    // Also try to play immediately when metadata loads
-    audio.addEventListener('loadedmetadata', () => {
-      if (!hasStarted && !isMuted && audio.duration) {
-        if (!randomStartSet) {
-          setRandomStart()
-        }
-        audio.play().catch(() => {
-          // Will try again on user interaction
-        })
-      }
-    })
-
-    // Handle when track ends - restart from random position
-    const handleEnded = () => {
-      if (audio.duration) {
-        setRandomStart()
-        audio.play().catch(console.error)
-      }
-    }
-
-    audio.addEventListener('error', handleError)
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata)
-    audio.addEventListener('canplaythrough', handleCanPlay)
-    audio.addEventListener('ended', handleEnded)
-
-    // Load the audio
-    audio.load()
-
-    return () => {
-      audio.removeEventListener('error', handleError)
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
-      audio.removeEventListener('canplaythrough', handleCanPlay)
-      audio.removeEventListener('ended', handleEnded)
-      audio.pause()
-      audio.src = ''
-    }
-  }, [])
-
-  // Handle mute/unmute
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.muted = isMuted
-      // If unmuting and audio hasn't started, try to play
-      if (!isMuted && audioRef.current.paused && audioRef.current.duration) {
-        if (audioRef.current.currentTime === 0) {
-          // Set random start if not already set
-          const randomStart = Math.random() * audioRef.current.duration * 0.9
-          audioRef.current.currentTime = randomStart
-        }
-        audioRef.current.play().catch(console.error)
-      }
-    }
-  }, [isMuted])
-
-  // Play audio on first user interaction (required by browsers)
-  useEffect(() => {
-    const handleFirstInteraction = () => {
-      if (audioRef.current && audioRef.current.paused && !isMuted) {
-        if (audioRef.current.duration) {
-          if (audioRef.current.currentTime === 0) {
-            // Set random start position on first play
-            const randomStart = Math.random() * audioRef.current.duration * 0.9
-            audioRef.current.currentTime = randomStart
-          }
-          audioRef.current.play().catch(console.error)
-        }
-      }
-    }
-
-    // Try multiple event types to catch user interaction
-    const events = ['click', 'touchstart', 'keydown', 'mousedown']
-    events.forEach(event => {
-      document.addEventListener(event, handleFirstInteraction, { once: true })
-    })
-
-    return () => {
-      events.forEach(event => {
-        document.removeEventListener(event, handleFirstInteraction)
-      })
-    }
-  }, [isMuted])
-
-  const handleMuteToggle = () => {
-    setIsMuted(!isMuted)
-    playSound("click")
-  }
 
   const handleHelpClick = () => {
     playSound("click")
@@ -392,18 +218,6 @@ export default function TopBar({ onHelpClick, canvasRef }: TopBarProps) {
     const canvasWidth = fabricCanvas.width || 800
     const canvasHeight = fabricCanvas.height || 600
 
-    // Calculate scale factor for mobile/tablet - base sizes are for 800x600 canvas
-    const baseCanvasWidth = 800
-    const baseCanvasHeight = 600
-    const isMobileOrTablet = canvasWidth < 1024
-    const scaleFactor = isMobileOrTablet 
-      ? Math.min(canvasWidth / baseCanvasWidth, canvasHeight / baseCanvasHeight)
-      : 1
-    
-    // Maximum image size as percentage of canvas (smaller on mobile)
-    const maxImageSizePercent = isMobileOrTablet ? 0.4 : 0.6
-    const maxImageSize = Math.min(canvasWidth, canvasHeight) * maxImageSizePercent
-
     try {
       const bgChoice = randomPick(backgroundsWithColors)
       const bgUrl = bgChoice.url
@@ -433,10 +247,8 @@ export default function TopBar({ onHelpClick, canvasRef }: TopBarProps) {
 
       const addImage = async (url: string, x: number, y: number, size: number, angle = 0) => {
         try {
-          // Scale the size based on canvas dimensions and limit maximum
-          const scaledSize = Math.min(size * scaleFactor, maxImageSize)
           const img = await FabricImage.fromURL(url, { crossOrigin: 'anonymous' })
-          const imgScale = scaledSize / Math.max(img.width || 100, img.height || 100)
+          const imgScale = size / Math.max(img.width || 100, img.height || 100)
           img.set({
             left: x,
             top: y,
@@ -451,7 +263,7 @@ export default function TopBar({ onHelpClick, canvasRef }: TopBarProps) {
             hasBorders: true,
             cornerColor: '#ff1493',
             cornerStyle: 'circle',
-            cornerSize: Math.max(8, 12 * scaleFactor), // Scale corner size too
+            cornerSize: 12,
             borderColor: '#ff1493',
           })
           fabricCanvas.add(img)
@@ -463,8 +275,7 @@ export default function TopBar({ onHelpClick, canvasRef }: TopBarProps) {
       }
       
       const addBalloon = async (x: number, y: number, angle = 0) => {
-        const baseSize = 100 + Math.random() * 100
-        const size = Math.min(baseSize * scaleFactor, maxImageSize)
+        const size = 100 + Math.random() * 100
         await addImage(randomPick(balloons), x, y, size, angle)
       }
 
@@ -525,25 +336,20 @@ export default function TopBar({ onHelpClick, canvasRef }: TopBarProps) {
       }
 
       const foodY = canvasHeight * 0.62
-      // Scale cake size - it's the largest element, so ensure it fits
-      const cakeSize = Math.min(500 * scaleFactor, maxImageSize * 1.2) // Allow cake to be slightly larger
-      await addImage(randomPick(cakes), canvasWidth * 0.5, foodY, cakeSize)
+      await addImage(randomPick(cakes), canvasWidth * 0.5, foodY, 500)
 
       const text = randomPick(birthdayTexts)
       const font = randomPick(fonts)
       const textColor = randomPick(complementaryTextColors)
       
-      // Scale text position and size for mobile
-      const textY = foodY - (280 * scaleFactor)
-      const fontSize = Math.max(32, 72 * scaleFactor) // Minimum 32px for readability
+      const textY = foodY - 280
 
       const itext = new IText(text, {
         left: canvasWidth / 2,
         top: textY,
-        fontSize: fontSize,
+        fontSize: 72,
         fontFamily: font,
         fill: textColor,
-        textAlign: 'center',
         originX: 'center',
         originY: 'center',
         selectable: true,
@@ -572,23 +378,23 @@ export default function TopBar({ onHelpClick, canvasRef }: TopBarProps) {
   }
 
   return (
-    <MacWindow className="mx-1 sm:mx-2 mt-1 sm:mt-2">
+    <MacWindow className="mx-2 mt-2">
       <div style={macStyles.titleBar}>
-        <div className="flex gap-0.5 sm:gap-1">
+        <div className="flex gap-1">
           <div style={{ ...macStyles.closeButton, backgroundColor: "#ff6b6b" }} title="Close" />
           <div style={{ ...macStyles.closeButton, backgroundColor: "#ffd93d" }} title="Minimize" />
           <div style={{ ...macStyles.closeButton, backgroundColor: "#6bcb77" }} title="Maximize" />
         </div>
-        <div style={macStyles.titleBarStripes} className="hidden md:block" />
-        <h1 className="text-[10px] sm:text-xs md:text-sm font-bold text-center flex-1 pixel-text truncate px-1 sm:px-2 text-white drop-shadow-[1px_1px_0_#c71585]">
-          ✨ Lauren&apos;s 30th Birthday Card Creator ✨
+        <div style={macStyles.titleBarStripes} className="hidden sm:block" />
+        <h1 className="text-xs sm:text-sm font-bold text-center flex-1 pixel-text truncate px-2 text-white drop-shadow-[1px_1px_0_#c71585]">
+          ✨ Lauren's 30th Birthday Card Creator ✨
         </h1>
-        <div style={macStyles.titleBarStripes} className="hidden md:block" />
+        <div style={macStyles.titleBarStripes} className="hidden sm:block" />
         <div
-          className="flex items-center justify-center text-[10px] sm:text-xs font-bold pixel-text"
+          className="flex items-center justify-center text-xs font-bold pixel-text"
           style={{
-            width: "22px",
-            height: "22px",
+            width: "26px",
+            height: "26px",
             border: "2px solid #c71585",
             background: "linear-gradient(180deg, #00e5ff 0%, #0891b2 100%)",
             color: "white",
@@ -599,36 +405,20 @@ export default function TopBar({ onHelpClick, canvasRef }: TopBarProps) {
         </div>
       </div>
       <div
-        className="px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-bold border-b-2 border-primary flex items-center justify-between gap-1 sm:gap-2"
+        className="px-3 py-1.5 text-xs font-bold border-b-2 border-primary flex items-center justify-between gap-2"
         style={{ background: "linear-gradient(90deg, #fff0f7 0%, #e0b0ff 50%, #b0e0ff 100%)" }}
       >
-        <div className="flex gap-1 sm:gap-2 flex-wrap">
-          <MacButton accent onClick={handleNewCard} style={{ padding: "4px 8px", fontSize: "10px" }} className="sm:!p-[6px_14px] sm:!text-xs">
-            <span style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}>✨</span> New
+        <div className="flex gap-2 flex-wrap">
+          <MacButton accent onClick={handleNewCard}><span style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}>✨</span> New</MacButton>
+          <MacButton secondary onClick={handleRandomDesign} disabled={isGenerating}>
+            {isGenerating ? "✨ Creating..." : "🔀 Random Design"}
           </MacButton>
-          <MacButton secondary onClick={handleRandomDesign} disabled={isGenerating} style={{ padding: "4px 8px", fontSize: "10px" }} className="sm:!p-[6px_14px] sm:!text-xs">
-            {isGenerating ? "✨..." : "🔀 Random Design"}
+          <MacButton primary onClick={handleSaveScreenshot} disabled={isExporting}>
+            {isExporting ? "💾 Saving..." : "💾 Save"}
           </MacButton>
-          <MacButton primary onClick={handleSaveScreenshot} disabled={isExporting} style={{ padding: "4px 8px", fontSize: "10px" }} className="sm:!p-[6px_14px] sm:!text-xs">
-            {isExporting ? "💾..." : "💾 Save"}
-          </MacButton>
-          <MacButton onClick={handleHelpClick} style={{ padding: "4px 8px", fontSize: "10px" }} className="sm:!p-[6px_14px] sm:!text-xs">💕 Help</MacButton>
-          <MacButton 
-            onClick={handleMuteToggle} 
-            style={{ 
-              padding: "4px 8px", 
-              fontSize: "10px",
-              opacity: isMuted ? 0.6 : 1
-            }} 
-            className="sm:!p-[6px_14px] sm:!text-xs"
-            title={isMuted ? "Unmute music" : "Mute music"}
-          >
-            {isMuted ? "🔇" : "🔊"}
-          </MacButton>
+          <MacButton onClick={handleHelpClick}>💕 Help</MacButton>
         </div>
-        <div className="hidden sm:block">
-          <Countdown targetDate="2025-12-21" timezone="America/Denver" />
-        </div>
+        <Countdown targetDate="2025-12-21" timezone="America/Denver" />
       </div>
     </MacWindow>
   )

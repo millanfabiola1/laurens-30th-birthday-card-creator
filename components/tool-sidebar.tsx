@@ -461,6 +461,14 @@ export default function ToolSidebar({
     { id: 'purple', value: '/backgrounds/Purple.png', label: 'Purple', type: 'image' as const },
     { id: 'rainbow-cloud', value: '/backgrounds/Rainbow-Cloud.png', label: 'Rainbow Cloud', type: 'image' as const },
     { id: 'rosey-wallpaper', value: '/backgrounds/Rosey-Wallpaper.png', label: 'Rosey', type: 'image' as const },
+    { id: 'chromatic', value: '/backgrounds/chromatic.png', label: 'Chromatic', type: 'image' as const },
+    { id: 'pink-aquarium', value: '/backgrounds/pink-aquarium.png', label: 'Pink Aquarium', type: 'image' as const },
+    { id: 'sunset-orange', value: '/backgrounds/sunset-orange.png', label: 'Sunset Orange', type: 'image' as const },
+    { id: 'ethereal-blue', value: '/backgrounds/ethereal-blue.png', label: 'Ethereal Blue', type: 'image' as const },
+    { id: 'blue-stars', value: '/backgrounds/blue-stars.jpg', label: 'Blue Stars', type: 'image' as const },
+    { id: 'tropical-beach', value: '/backgrounds/tropical-beach.jpg', label: 'Tropical Beach', type: 'image' as const },
+    { id: 'tropical', value: '/backgrounds/tropical.jpg', label: 'Tropical', type: 'image' as const },
+    { id: 'pink-bubbles', value: '/backgrounds/pink-bubbles.jpg', label: 'Pink Bubbles', type: 'image' as const },
   ]
 
   // Handle custom background upload
