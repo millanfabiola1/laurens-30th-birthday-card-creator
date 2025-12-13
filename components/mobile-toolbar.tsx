@@ -255,6 +255,14 @@ export default function MobileToolbar({
   ]
 
   const backgroundImages = [
+    { id: 'chromatic', value: '/backgrounds/chromatic.png', label: 'Chromatic' },
+    { id: 'pink-aquarium', value: '/backgrounds/pink-aquarium.png', label: 'Pink Aquarium' },
+    { id: 'sunset-orange', value: '/backgrounds/sunset-orange.png', label: 'Sunset Orange' },
+    { id: 'ethereal-blue', value: '/backgrounds/ethereal-blue.png', label: 'Ethereal Blue' },
+    { id: 'blue-stars', value: '/backgrounds/blue-stars.jpg', label: 'Blue Stars' },
+    { id: 'tropical-beach', value: '/backgrounds/tropical-beach.jpg', label: 'Tropical Beach' },
+    { id: 'tropical', value: '/backgrounds/tropical.jpg', label: 'Tropical' },
+    { id: 'pink-bubbles', value: '/backgrounds/pink-bubbles.jpg', label: 'Pink Bubbles' },
     { id: 'party', value: '/backgrounds/Party.png', label: 'Party' },
     { id: 'rainbow', value: '/backgrounds/rainbow.png', label: 'Rainbow' },
     { id: 'salon', value: '/backgrounds/Salon.png', label: 'Salon' },
@@ -267,14 +275,6 @@ export default function MobileToolbar({
     { id: 'glam', value: '/backgrounds/Glam.png', label: 'Glam' },
     { id: 'hearts', value: '/backgrounds/Pink-Heart-Clouds.png', label: 'Hearts' },
     { id: 'rosey', value: '/backgrounds/Rosey-Wallpaper.png', label: 'Rosey' },
-    { id: 'chromatic', value: '/backgrounds/chromatic.png', label: 'Chromatic' },
-    { id: 'pink-aquarium', value: '/backgrounds/pink-aquarium.png', label: 'Pink Aquarium' },
-    { id: 'sunset-orange', value: '/backgrounds/sunset-orange.png', label: 'Sunset Orange' },
-    { id: 'ethereal-blue', value: '/backgrounds/ethereal-blue.png', label: 'Ethereal Blue' },
-    { id: 'blue-stars', value: '/backgrounds/blue-stars.jpg', label: 'Blue Stars' },
-    { id: 'tropical-beach', value: '/backgrounds/tropical-beach.jpg', label: 'Tropical Beach' },
-    { id: 'tropical', value: '/backgrounds/tropical.jpg', label: 'Tropical' },
-    { id: 'pink-bubbles', value: '/backgrounds/pink-bubbles.jpg', label: 'Pink Bubbles' },
   ]
 
   const laurenSpecials = [
