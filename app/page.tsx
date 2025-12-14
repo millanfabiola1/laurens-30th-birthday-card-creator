@@ -191,15 +191,27 @@ export default function Home() {
       audio.addEventListener('loadedmetadata', setRandomStart, { once: true })
     }
 
-    // Try to play music (may require user interaction due to browser autoplay policies)
+    // Try to play music automatically (may require user interaction due to browser autoplay policies)
     const tryPlay = async () => {
       try {
         await audio.play()
         setIsMusicMuted(false)
       } catch (err) {
-        // Autoplay blocked - user will need to interact first
-        console.log('Autoplay blocked, waiting for user interaction')
-        setIsMusicMuted(true)
+        // Autoplay blocked - try again after user interaction
+        console.log('Autoplay blocked, will try on user interaction')
+        // Set up a one-time click listener to start music
+        const startOnInteraction = () => {
+          audio.play().then(() => {
+            setIsMusicMuted(false)
+          }).catch(() => {
+            setIsMusicMuted(true)
+          })
+          document.removeEventListener('click', startOnInteraction)
+          document.removeEventListener('touchstart', startOnInteraction)
+        }
+        document.addEventListener('click', startOnInteraction, { once: true })
+        document.addEventListener('touchstart', startOnInteraction, { once: true })
+        setIsMusicMuted(false) // Show as playing (not muted) even if waiting for interaction
       }
     }
 
