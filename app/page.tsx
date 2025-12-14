@@ -173,6 +173,24 @@ export default function Home() {
     audio.volume = 0.3 // 30% volume for background music
     musicRef.current = audio
 
+    // Set random start point when audio metadata is loaded
+    const setRandomStart = () => {
+      if (audio.duration && isFinite(audio.duration)) {
+        // Pick a random point in the song (between 0% and 90% to avoid starting too close to the end)
+        const randomStart = Math.random() * audio.duration * 0.9
+        audio.currentTime = randomStart
+      }
+    }
+
+    // Try to get duration and set random start
+    if (audio.readyState >= 2) {
+      // Metadata already loaded
+      setRandomStart()
+    } else {
+      // Wait for metadata to load
+      audio.addEventListener('loadedmetadata', setRandomStart, { once: true })
+    }
+
     // Try to play music (may require user interaction due to browser autoplay policies)
     const tryPlay = async () => {
       try {
@@ -190,6 +208,7 @@ export default function Home() {
 
     return () => {
       clearTimeout(playTimer)
+      audio.removeEventListener('loadedmetadata', setRandomStart)
       if (audio) {
         audio.pause()
         audio.src = ''
@@ -203,6 +222,12 @@ export default function Home() {
     if (!audio) return
 
     if (isMusicMuted) {
+      // If starting from beginning or near end, set a new random start point
+      if (audio.currentTime < 5 || (audio.duration && audio.currentTime > audio.duration * 0.9)) {
+        if (audio.duration && isFinite(audio.duration)) {
+          audio.currentTime = Math.random() * audio.duration * 0.9
+        }
+      }
       audio.play().then(() => {
         setIsMusicMuted(false)
         playSound('click')
