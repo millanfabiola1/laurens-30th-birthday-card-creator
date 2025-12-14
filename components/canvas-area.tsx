@@ -539,7 +539,6 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
         
         // Handle tool clicks when not in drawing mode
         const pointer = canvas.getPointer(opt.e)
-        const tool = currentToolRef.current
         
         if (tool === 'fill') {
           // Fill canvas with pattern
