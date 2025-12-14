@@ -519,8 +519,11 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
 
       // Event listeners
       canvas.on('mouse:down', (opt) => {
-        // Prevent any interaction with background objects
-        if (opt.target && (opt.target as any).isBackgroundRect) {
+        const tool = currentToolRef.current
+        
+        // Prevent any interaction with background objects EXCEPT when using images tool
+        // (we need to allow clicks on background to place images)
+        if (opt.target && (opt.target as any).isBackgroundRect && tool !== 'images') {
           canvas.discardActiveObject()
           canvas.renderAll()
           return
@@ -911,15 +914,8 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
             return
           }
           
-          // If there's an active selection and user clicked on empty space, just deselect first
-          const activeObject = canvas.getActiveObject()
-          if (activeObject) {
-            canvas.discardActiveObject()
-            canvas.renderAll()
-            return // Don't add new image, just deselect
-          }
-          
-          // Add image stamp at click position (only on empty canvas space and no selection)
+          // If clicked on background or empty space, add new image
+          // (Background clicks are now allowed for images tool)
           const imageStamp = currentImageStampRef.current
           const size = imageStampSizeRef.current
           
@@ -952,6 +948,9 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
             ;(fabricImg as any).objectType = 'image-stamp'
 
             canvas.add(fabricImg)
+            // Ensure background stays at back when adding images
+            const bgObjects = canvas.getObjects().filter((obj: any) => obj.isBackgroundRect)
+            bgObjects.forEach((bg) => canvas.sendObjectToBack(bg))
             canvas.bringObjectToFront(fabricImg)
             canvas.setActiveObject(fabricImg)
             canvas.renderAll()
