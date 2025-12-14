@@ -213,7 +213,7 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       backgroundObjects.forEach((bgObj) => {
         // Send to back
         canvas.sendObjectToBack(bgObj)
-        // Lock all properties
+        // Lock all properties completely
         bgObj.set({
           selectable: false,
           evented: false,
@@ -222,9 +222,16 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
           lockRotation: true,
           lockScalingX: true,
           lockScalingY: true,
+          lockSkewingX: true,
+          lockSkewingY: true,
           hasControls: false,
           hasBorders: false,
+          hasRotatingPoint: false,
+          hoverCursor: 'default',
+          moveCursor: 'default',
         })
+        // Force update coords to prevent any movement
+        bgObj.setCoords()
       })
     }, [])
     
@@ -1139,7 +1146,33 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
         saveToHistoryRef.current()
       })
 
-      canvas.on('object:modified', () => {
+      canvas.on('object:modified', (e) => {
+        const obj = e.target
+        // Prevent background from being modified - reset it if it was changed
+        if (obj && (obj as any).isBackgroundRect) {
+          const canvas = fabricRef.current
+          if (canvas) {
+            // Reset background to locked state
+            obj.set({
+              left: 0,
+              top: 0,
+              selectable: false,
+              evented: false,
+              lockMovementX: true,
+              lockMovementY: true,
+              lockRotation: true,
+              lockScalingX: true,
+              lockScalingY: true,
+              lockSkewingX: true,
+              lockSkewingY: true,
+              hasControls: false,
+              hasBorders: false,
+            })
+            canvas.sendObjectToBack(obj)
+            canvas.renderAll()
+            return // Don't save history for background modifications
+          }
+        }
         saveToHistoryRef.current()
       })
 
@@ -1179,6 +1212,7 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       canvas.on('after:render', () => {
         ensureBackgroundLockedRef.current()
       })
+
 
       return () => {
         resizeObserver.disconnect()
@@ -1444,9 +1478,20 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
         canvas.selection = true
         canvas.forEachObject((obj) => {
           if ((obj as any).isBackgroundRect) {
-            // Background should NEVER be selectable or moveable
+            // Background should NEVER be selectable or moveable - lock everything
             obj.selectable = false
             obj.evented = false
+            obj.lockMovementX = true
+            obj.lockMovementY = true
+            obj.lockRotation = true
+            obj.lockScalingX = true
+            obj.lockScalingY = true
+            obj.lockSkewingX = true
+            obj.lockSkewingY = true
+            obj.hasControls = false
+            obj.hasBorders = false
+            obj.hoverCursor = 'default'
+            obj.moveCursor = 'default'
           } else {
             obj.selectable = true
             obj.evented = true
@@ -1456,8 +1501,16 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
         // Disable selection for other tools so clicks place new elements
         canvas.selection = false
         canvas.forEachObject((obj) => {
-          obj.selectable = false
-          obj.evented = false
+          if ((obj as any).isBackgroundRect) {
+            // Keep background locked even when selection is disabled
+            obj.selectable = false
+            obj.evented = false
+            obj.lockMovementX = true
+            obj.lockMovementY = true
+          } else {
+            obj.selectable = false
+            obj.evented = false
+          }
         })
       }
       
@@ -1468,6 +1521,15 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
           obj.evented = false
           obj.lockMovementX = true
           obj.lockMovementY = true
+          obj.lockRotation = true
+          obj.lockScalingX = true
+          obj.lockScalingY = true
+          obj.lockSkewingX = true
+          obj.lockSkewingY = true
+          obj.hasControls = false
+          obj.hasBorders = false
+          obj.hoverCursor = 'default'
+          obj.moveCursor = 'default'
         }
       })
     }, [currentTool, currentColor, brushSize, brushShape, eraserSize, eraserShape, createBrush])
@@ -2149,17 +2211,29 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
           lockRotation: true,
           lockScalingX: true,
           lockScalingY: true,
+          lockSkewingX: true,
+          lockSkewingY: true,
           hasControls: false,
           hasBorders: false,
+          hasRotatingPoint: false,
+          excludeFromExport: false,
           originX: 'left',
           originY: 'top',
+          // Make it completely non-interactive
+          hoverCursor: 'default',
+          moveCursor: 'default',
         })
         
         ;(img as any).isBackgroundRect = true
+        ;(img as any).excludeFromExport = false
         
         currentCanvas.backgroundColor = '#ffffff'
         currentCanvas.add(img)
         currentCanvas.sendObjectToBack(img)
+        
+        // Immediately lock it again after adding
+        ensureBackgroundLockedRef.current()
+        
         currentCanvas.renderAll()
         saveToHistoryRef.current()
       }).catch((err) => {
