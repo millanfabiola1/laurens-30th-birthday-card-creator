@@ -48,6 +48,8 @@ export default function Home() {
   const [isTourOpen, setIsTourOpen] = useState<boolean>(false)
   const [currentBackground, setCurrentBackground] = useState<string>("#ffffff")
   const [shouldCloseDrawer, setShouldCloseDrawer] = useState<boolean>(false)
+  const [isMusicMuted, setIsMusicMuted] = useState<boolean>(false)
+  const musicRef = useRef<HTMLAudioElement | null>(null)
   const canvasRef = useRef<FabricCanvasRef | null>(null)
   const isRestoringRef = useRef<boolean>(false)
 
@@ -163,6 +165,56 @@ export default function Home() {
     const timer = setTimeout(checkAndSaveInitial, 500)
     return () => clearTimeout(timer)
   }, [history.length])
+
+  // Initialize background music
+  useEffect(() => {
+    const audio = new Audio('/lauren-mix.mp3')
+    audio.loop = true
+    audio.volume = 0.3 // 30% volume for background music
+    musicRef.current = audio
+
+    // Try to play music (may require user interaction due to browser autoplay policies)
+    const tryPlay = async () => {
+      try {
+        await audio.play()
+        setIsMusicMuted(false)
+      } catch (err) {
+        // Autoplay blocked - user will need to interact first
+        console.log('Autoplay blocked, waiting for user interaction')
+        setIsMusicMuted(true)
+      }
+    }
+
+    // Try to play after a short delay
+    const playTimer = setTimeout(tryPlay, 500)
+
+    return () => {
+      clearTimeout(playTimer)
+      if (audio) {
+        audio.pause()
+        audio.src = ''
+      }
+    }
+  }, [])
+
+  // Handle music mute/unmute
+  const toggleMusic = useCallback(() => {
+    const audio = musicRef.current
+    if (!audio) return
+
+    if (isMusicMuted) {
+      audio.play().then(() => {
+        setIsMusicMuted(false)
+        playSound('click')
+      }).catch((err) => {
+        console.error('Failed to play music:', err)
+      })
+    } else {
+      audio.pause()
+      setIsMusicMuted(true)
+      playSound('click')
+    }
+  }, [isMusicMuted])
 
   const getFontFamily = (font: string) => {
     switch (font) {
@@ -489,6 +541,26 @@ export default function Home() {
 
   return (
     <div className="flex flex-col h-dvh mac-desktop overflow-hidden">
+      {/* Music toggle button - fixed position */}
+      <button
+        onClick={toggleMusic}
+        className="fixed bottom-4 right-4 z-50 w-12 h-12 rounded-full bg-pink-500 hover:bg-pink-600 text-white flex items-center justify-center shadow-lg transition-all hover:scale-110"
+        style={{
+          background: isMusicMuted 
+            ? 'linear-gradient(135deg, #ff6b6b 0%, #c92a2a 100%)'
+            : 'linear-gradient(135deg, #ff1493 0%, #c71585 100%)',
+          boxShadow: '0 4px 12px rgba(199, 21, 133, 0.4)',
+        }}
+        title={isMusicMuted ? 'Unmute music' : 'Mute music'}
+        aria-label={isMusicMuted ? 'Unmute music' : 'Mute music'}
+      >
+        {isMusicMuted ? (
+          <span className="text-2xl">🔇</span>
+        ) : (
+          <span className="text-2xl">🎵</span>
+        )}
+      </button>
+
       <div className="w-full max-w-[1920px] mx-auto px-2 sm:px-3 md:px-4 lg:px-8 xl:px-12 flex flex-col flex-1 overflow-hidden">
         {/* TopBar - Responsive browser window look for all screen sizes */}
         <TopBar onHelpClick={() => setIsTourOpen(true)} canvasRef={canvasRef} />
