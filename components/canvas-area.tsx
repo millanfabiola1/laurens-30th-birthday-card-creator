@@ -956,9 +956,30 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
             canvas.add(fabricImg)
             // Ensure background stays at back when adding images
             const bgObjects = canvas.getObjects().filter((obj: any) => obj.isBackgroundRect)
-            bgObjects.forEach((bg) => canvas.sendObjectToBack(bg))
+            bgObjects.forEach((bg) => {
+              canvas.sendObjectToBack(bg)
+              // Immediately re-lock background after sending to back
+              bg.set({
+                selectable: false,
+                evented: false,
+                lockMovementX: true,
+                lockMovementY: true,
+                lockRotation: true,
+                lockScalingX: true,
+                lockScalingY: true,
+                lockSkewingX: true,
+                lockSkewingY: true,
+                hasControls: false,
+                hasBorders: false,
+                hoverCursor: 'default',
+                moveCursor: 'default',
+              })
+              bg.setCoords()
+            })
             canvas.bringObjectToFront(fabricImg)
             canvas.setActiveObject(fabricImg)
+            // Force background to stay locked after setting active object
+            ensureBackgroundLockedRef.current()
             canvas.renderAll()
             saveToHistoryRef.current()
             playSound('stamp')
@@ -1137,13 +1158,45 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
       })
 
       canvas.on('object:added', (e) => {
+        const addedObj = e.target
+        
+        // Handle history saving
         // Don't double-save for paths (handled by path:created)
-        if (e.target?.type === 'path') return
+        if (addedObj?.type === 'path') return
         // Don't save history for default stamps (they're added automatically)
-        if ((e.target as any)?.isDefaultStamp) {
+        if ((addedObj as any)?.isDefaultStamp) {
           return
         }
         saveToHistoryRef.current()
+        
+        // Handle background locking - if a non-background object was added, immediately lock and send background to back
+        if (addedObj && !(addedObj as any).isBackgroundRect) {
+          const canvas = fabricRef.current
+          if (canvas) {
+            const bgObjects = canvas.getObjects().filter((obj: any) => obj.isBackgroundRect)
+            bgObjects.forEach((bgObj) => {
+              canvas.sendObjectToBack(bgObj)
+              // Aggressively lock the background
+              bgObj.set({
+                selectable: false,
+                evented: false,
+                lockMovementX: true,
+                lockMovementY: true,
+                lockRotation: true,
+                lockScalingX: true,
+                lockScalingY: true,
+                lockSkewingX: true,
+                lockSkewingY: true,
+                hasControls: false,
+                hasBorders: false,
+                hoverCursor: 'default',
+                moveCursor: 'default',
+              })
+              bgObj.setCoords()
+            })
+          }
+        }
+        ensureBackgroundLockedRef.current()
       })
 
       canvas.on('object:modified', (e) => {
@@ -1181,12 +1234,16 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
         // Prevent background objects from being selected
         if (selected && (selected as any).isBackgroundRect) {
           canvas.discardActiveObject()
+          // Immediately re-lock all backgrounds
+          ensureBackgroundLockedRef.current()
           canvas.renderAll()
           return
         }
         if (selected && (selected as any).customId) {
           setSelectedElementId((selected as any).customId)
         }
+        // Always ensure background stays locked when selection changes
+        ensureBackgroundLockedRef.current()
       })
 
       canvas.on('object:selected', (e) => {
@@ -1194,17 +1251,68 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
         // Prevent background objects from being selected
         if (obj && (obj as any).isBackgroundRect) {
           canvas.discardActiveObject()
+          // Immediately re-lock all backgrounds
+          ensureBackgroundLockedRef.current()
           canvas.renderAll()
           return
+        }
+        // Always ensure background stays locked when object is selected
+        ensureBackgroundLockedRef.current()
+      })
+
+      // Also lock background when selection is updated
+      canvas.on('selection:updated', () => {
+        ensureBackgroundLockedRef.current()
+      })
+
+      // Prevent background from being moved during mouse interactions
+      canvas.on('object:moving', (e) => {
+        const obj = e.target
+        if (obj && (obj as any).isBackgroundRect) {
+          // Cancel the movement - reset to original position
+          const originalLeft = (obj as any).originalLeft ?? 0
+          const originalTop = (obj as any).originalTop ?? 0
+          obj.set({
+            left: originalLeft,
+            top: originalTop,
+          })
+          obj.setCoords()
+          canvas.renderAll()
+        }
+      })
+
+      // Also prevent background from being scaled
+      canvas.on('object:scaling', (e) => {
+        const obj = e.target
+        if (obj && (obj as any).isBackgroundRect) {
+          // Reset scaling to original
+          const originalScale = (obj as any).originalScale
+          if (originalScale) {
+            obj.set({
+              scaleX: originalScale,
+              scaleY: originalScale,
+            })
+            obj.setCoords()
+            canvas.renderAll()
+          }
+        }
+      })
+
+      // Prevent background from being rotated
+      canvas.on('object:rotating', (e) => {
+        const obj = e.target
+        if (obj && (obj as any).isBackgroundRect) {
+          obj.set({
+            angle: 0,
+          })
+          obj.setCoords()
+          canvas.renderAll()
         }
       })
 
       canvas.on('selection:cleared', () => {
         setSelectedElementId(null)
-      })
-
-      // Ensure background objects stay at the back whenever objects are added
-      canvas.on('object:added', () => {
+        // Ensure background stays locked when selection is cleared
         ensureBackgroundLockedRef.current()
       })
 
@@ -2188,14 +2296,18 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
         const canvasWidth = currentCanvas.width || 800
         const canvasHeight = currentCanvas.height || 600
         
+        // Store original dimensions for reset if needed
+        const originalWidth = img.width || 1
+        const originalHeight = img.height || 1
+        
         // Scale image to cover entire canvas (cover mode)
-        const scaleX = canvasWidth / (img.width || 1)
-        const scaleY = canvasHeight / (img.height || 1)
+        const scaleX = canvasWidth / originalWidth
+        const scaleY = canvasHeight / originalHeight
         const scale = Math.max(scaleX, scaleY)
         
         // Center the image on canvas
-        const scaledWidth = (img.width || 1) * scale
-        const scaledHeight = (img.height || 1) * scale
+        const scaledWidth = originalWidth * scale
+        const scaledHeight = originalHeight * scale
         const left = (canvasWidth - scaledWidth) / 2
         const top = (canvasHeight - scaledHeight) / 2
         
@@ -2226,6 +2338,11 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
         
         ;(img as any).isBackgroundRect = true
         ;(img as any).excludeFromExport = false
+        ;(img as any).originalWidth = originalWidth
+        ;(img as any).originalHeight = originalHeight
+        ;(img as any).originalScale = scale
+        ;(img as any).originalLeft = left
+        ;(img as any).originalTop = top
         
         currentCanvas.backgroundColor = '#ffffff'
         currentCanvas.add(img)
