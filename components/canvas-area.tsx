@@ -1347,168 +1347,237 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
 
         // Only load default if canvas is completely empty
         if (objects.length === 0) {
-          // Set default background image
+          // Set default background image with retry logic for iPad
           const defaultBgImage = '/backgrounds/lauren-default.png'
-          FabricImage.fromURL(defaultBgImage, { crossOrigin: 'anonymous' }).then((img) => {
-          if (!img || !canvas) return
           
-          const canvasWidth = canvas.width || 800
-          const canvasHeight = canvas.height || 600
-          
-          // Get original image dimensions (try multiple methods for reliability)
-          let originalWidth = img.width || 1
-          let originalHeight = img.height || 1
-          
-          // Fallback: try to get dimensions from the underlying HTML image element
-          try {
-            const imgElement = img.getElement()
-            if (imgElement && (imgElement.naturalWidth || imgElement.width)) {
-              originalWidth = imgElement.naturalWidth || imgElement.width || originalWidth
-              originalHeight = imgElement.naturalHeight || imgElement.height || originalHeight
+          const loadBackgroundImage = (retryCount = 0) => {
+            // Ensure canvas has valid dimensions
+            const canvasWidth = canvas.width || 800
+            const canvasHeight = canvas.height || 600
+            
+            if (canvasWidth === 0 || canvasHeight === 0) {
+              // Retry if canvas dimensions are not ready yet
+              if (retryCount < 5) {
+                setTimeout(() => loadBackgroundImage(retryCount + 1), 200)
+              }
+              return
             }
-          } catch (e) {
-            // If we can't get element dimensions, use FabricImage dimensions
+            
+            FabricImage.fromURL(defaultBgImage, { crossOrigin: 'anonymous' })
+              .then((img) => {
+                const currentCanvas = fabricRef.current
+                if (!img || !currentCanvas) {
+                  if (retryCount < 3) {
+                    setTimeout(() => loadBackgroundImage(retryCount + 1), 500)
+                  }
+                  return
+                }
+                
+                // Double-check canvas still exists and has size
+                const currentWidth = currentCanvas.width || 800
+                const currentHeight = currentCanvas.height || 600
+                
+                if (currentWidth === 0 || currentHeight === 0) {
+                  if (retryCount < 3) {
+                    setTimeout(() => loadBackgroundImage(retryCount + 1), 500)
+                  }
+                  return
+                }
+                
+                // Get original image dimensions (try multiple methods for reliability)
+                let originalWidth = img.width || 1
+                let originalHeight = img.height || 1
+                
+                // Fallback: try to get dimensions from the underlying HTML image element
+                try {
+                  const imgElement = img.getElement()
+                  if (imgElement) {
+                    // Wait for image to be fully loaded
+                    if (imgElement.complete && imgElement.naturalWidth > 0) {
+                      originalWidth = imgElement.naturalWidth || imgElement.width || originalWidth
+                      originalHeight = imgElement.naturalHeight || imgElement.height || originalHeight
+                    } else {
+                      // Image not loaded yet, wait for it
+                      imgElement.onload = () => {
+                        originalWidth = imgElement.naturalWidth || imgElement.width || originalWidth
+                        originalHeight = imgElement.naturalHeight || imgElement.height || originalHeight
+                        applyBackgroundImage(img, originalWidth, originalHeight, currentWidth, currentHeight)
+                      }
+                      imgElement.onerror = () => {
+                        console.error('Error loading background image element on iPad')
+                        if (retryCount < 3) {
+                          setTimeout(() => loadBackgroundImage(retryCount + 1), 1000)
+                        }
+                      }
+                      return
+                    }
+                  }
+                } catch (e) {
+                  console.warn('Could not get image element dimensions:', e)
+                }
+                
+                applyBackgroundImage(img, originalWidth, originalHeight, currentWidth, currentHeight)
+              })
+              .catch((err) => {
+                console.error('Error loading default background image (attempt ' + (retryCount + 1) + '):', err)
+                if (retryCount < 3) {
+                  setTimeout(() => loadBackgroundImage(retryCount + 1), 1000)
+                }
+              })
           }
           
-          // Store original dimensions before scaling
-          ;(img as any).originalWidth = originalWidth
-          ;(img as any).originalHeight = originalHeight
+          const applyBackgroundImage = (img: FabricImage, originalWidth: number, originalHeight: number, canvasWidth: number, canvasHeight: number) => {
+            const currentCanvas = fabricRef.current
+            if (!currentCanvas) return
+            
+            // Store original dimensions before scaling
+            ;(img as any).originalWidth = originalWidth
+            ;(img as any).originalHeight = originalHeight
+            
+            // Scale image to fit within canvas while maintaining aspect ratio (contain mode)
+            const scaleX = canvasWidth / originalWidth
+            const scaleY = canvasHeight / originalHeight
+            const scale = Math.min(scaleX, scaleY) // Use the smaller scale to fit within canvas
+            
+            // Calculate centered position
+            const scaledWidth = originalWidth * scale
+            const scaledHeight = originalHeight * scale
+            const left = (canvasWidth - scaledWidth) / 2
+            const top = (canvasHeight - scaledHeight) / 2
+            
+            // Auto-fit to canvas while maintaining aspect ratio
+            img.set({
+              left: left,
+              top: top,
+              scaleX: scale,
+              scaleY: scale,
+              selectable: false,
+              evented: false,
+              lockMovementX: true,
+              lockMovementY: true,
+              lockRotation: true,
+              lockScalingX: true,
+              lockScalingY: true,
+              hasControls: false,
+              hasBorders: false,
+              originX: 'left',
+              originY: 'top',
+            })
+            
+            ;(img as any).isBackgroundRect = true
+            ;(img as any).isDefaultBackground = true // Mark as default background
+            
+            currentCanvas.backgroundColor = '#ffffff'
+            currentCanvas.add(img)
+            currentCanvas.sendObjectToBack(img)
+            
+            // Ensure it's locked
+            ensureBackgroundLockedRef.current()
+            
+            currentCanvas.renderAll()
+            
+            // Continue with stamp loading
+            loadDefaultStamps(canvasWidth, canvasHeight)
+          }
           
-          // Scale image to fit within canvas while maintaining aspect ratio (contain mode)
-          const scaleX = canvasWidth / originalWidth
-          const scaleY = canvasHeight / originalHeight
-          const scale = Math.min(scaleX, scaleY) // Use the smaller scale to fit within canvas
-          
-          // Calculate centered position
-          const scaledWidth = originalWidth * scale
-          const scaledHeight = originalHeight * scale
-          const left = (canvasWidth - scaledWidth) / 2
-          const top = (canvasHeight - scaledHeight) / 2
-          
-          // Auto-fit to canvas while maintaining aspect ratio
-          img.set({
-            left: left,
-            top: top,
-            scaleX: scale,
-            scaleY: scale,
-            selectable: false,
-            evented: false,
-            lockMovementX: true,
-            lockMovementY: true,
-            lockRotation: true,
-            lockScalingX: true,
-            lockScalingY: true,
-            hasControls: false,
-            hasBorders: false,
-            originX: 'left',
-            originY: 'top',
-          })
-          
-          ;(img as any).isBackgroundRect = true
-          ;(img as any).isDefaultBackground = true // Mark as default background
-          
-          canvas.backgroundColor = '#ffffff'
-          canvas.add(img)
-          canvas.sendObjectToBack(img)
-          
-          // Add 40-70 randomly scattered stamps over the background
-          const numStamps = Math.floor(Math.random() * 31) + 40 // Random between 40-70
-          
-          // Generate list of available kidpix stamps (1-18, 21-109)
-          const availableStamps: number[] = [
-            ...Array.from({ length: 18 }, (_, i) => i + 1),
-            ...Array.from({ length: 89 }, (_, i) => i + 21),
-          ]
-          
-          // Randomly shuffle and select stamps
-          const shuffledStamps = availableStamps.sort(() => Math.random() - 0.5)
-          const selectedStamps = shuffledStamps.slice(0, numStamps)
-          
-          // Add stamps with some delay to avoid overwhelming the browser
-          selectedStamps.forEach((stampNum, index) => {
-            setTimeout(() => {
-              // Check BEFORE even starting to load the image
-              if (stopAddingDefaultStampsRef.current) {
-                return // Don't even start loading if background was changed
-              }
-              
-              const stampPath = `/stamps/kidpix-spritesheet-0-${stampNum}.png`
-              // Smaller stamps on mobile for first-time visitor stamps
-              const isMobile = window.innerWidth < 768
-              const stampSize = isMobile ? 32 : 48
-              
-              // Random position on canvas (with some padding from edges)
-              const padding = isMobile ? 30 : 50
-              const x = Math.random() * (canvasWidth - padding * 2) + padding
-              const y = Math.random() * (canvasHeight - padding * 2) + padding
-              
-              FabricImage.fromURL(stampPath, { crossOrigin: 'anonymous' }).then((stampImg) => {
-                // Check if we should stop adding default stamps (user changed background)
+          const loadDefaultStamps = (canvasWidth: number, canvasHeight: number) => {
+            // Add 40-70 randomly scattered stamps over the background
+            const numStamps = Math.floor(Math.random() * 31) + 40 // Random between 40-70
+            
+            // Generate list of available kidpix stamps (1-18, 21-109)
+            const availableStamps: number[] = [
+              ...Array.from({ length: 18 }, (_, i) => i + 1),
+              ...Array.from({ length: 89 }, (_, i) => i + 21),
+            ]
+            
+            // Randomly shuffle and select stamps
+            const shuffledStamps = availableStamps.sort(() => Math.random() - 0.5)
+            const selectedStamps = shuffledStamps.slice(0, numStamps)
+            
+            // Add stamps with some delay to avoid overwhelming the browser
+            selectedStamps.forEach((stampNum, index) => {
+              setTimeout(() => {
+                // Check BEFORE even starting to load the image
                 if (stopAddingDefaultStampsRef.current) {
-                  console.log('Skipping default stamp - background was changed')
-                  return
+                  return // Don't even start loading if background was changed
                 }
                 
-                // Use fresh canvas reference, not closure variable
-                const currentCanvas = fabricRef.current
-                if (!stampImg || !currentCanvas) return
+                const stampPath = `/stamps/kidpix-spritesheet-0-${stampNum}.png`
+                // Smaller stamps on mobile for first-time visitor stamps
+                const isMobile = window.innerWidth < 768
+                const stampSize = isMobile ? 32 : 48
                 
-                // Double-check flag again (might have changed during image load)
-                if (stopAddingDefaultStampsRef.current) {
-                  console.log('Skipping default stamp (double-check) - background was changed')
-                  return
-                }
+                // Random position on canvas (with some padding from edges)
+                const padding = isMobile ? 30 : 50
+                const x = Math.random() * (canvasWidth - padding * 2) + padding
+                const y = Math.random() * (canvasHeight - padding * 2) + padding
                 
-                const scale = stampSize / Math.max(stampImg.width || 50, stampImg.height || 50)
-                const rotation = (Math.random() - 0.5) * 30 // Random rotation between -15 and +15 degrees
-                
-                stampImg.set({
-                  left: x,
-                  top: y,
-                  scaleX: scale,
-                  scaleY: scale,
-                  angle: rotation,
-                  originX: 'center',
-                  originY: 'center',
-                  selectable: true,
-                  evented: true,
-                  hasControls: true,
-                  hasBorders: true,
-                  cornerColor: '#ff1493',
-                  cornerStyle: 'circle',
-                  cornerSize: 12,
-                  borderColor: '#ff1493',
-                  transparentCorners: false,
-                  lockUniScaling: false,
-                  minScaleLimit: 0.1,
+                FabricImage.fromURL(stampPath, { crossOrigin: 'anonymous' }).then((stampImg) => {
+                  // Check if we should stop adding default stamps (user changed background)
+                  if (stopAddingDefaultStampsRef.current) {
+                    console.log('Skipping default stamp - background was changed')
+                    return
+                  }
+                  
+                  // Use fresh canvas reference, not closure variable
+                  const currentCanvas = fabricRef.current
+                  if (!stampImg || !currentCanvas) return
+                  
+                  // Double-check flag again (might have changed during image load)
+                  if (stopAddingDefaultStampsRef.current) {
+                    console.log('Skipping default stamp (double-check) - background was changed')
+                    return
+                  }
+                  
+                  const scale = stampSize / Math.max(stampImg.width || 50, stampImg.height || 50)
+                  const rotation = (Math.random() - 0.5) * 30 // Random rotation between -15 and +15 degrees
+                  
+                  stampImg.set({
+                    left: x,
+                    top: y,
+                    scaleX: scale,
+                    scaleY: scale,
+                    angle: rotation,
+                    originX: 'center',
+                    originY: 'center',
+                    selectable: true,
+                    evented: true,
+                    hasControls: true,
+                    hasBorders: true,
+                    cornerColor: '#ff1493',
+                    cornerStyle: 'circle',
+                    cornerSize: 12,
+                    borderColor: '#ff1493',
+                    transparentCorners: false,
+                    lockUniScaling: false,
+                    minScaleLimit: 0.1,
+                  })
+                  
+                  // FINAL check before adding - this is critical
+                  if (stopAddingDefaultStampsRef.current) {
+                    console.log('Skipping default stamp (final check) - background was changed')
+                    return
+                  }
+                  
+                  // Set custom properties directly (Fabric.js requirement for custom properties)
+                  ;(stampImg as any).customId = `stamp-${Date.now()}-${index}`
+                  ;(stampImg as any).objectType = 'stamp'
+                  ;(stampImg as any).isDefaultStamp = true // Mark as default stamp
+                  
+                  // Store reference for easy removal later
+                  defaultStampsRef.current.push(stampImg)
+                  
+                  currentCanvas.add(stampImg)
+                  currentCanvas.renderAll()
+                }).catch((err) => {
+                  console.error('Error loading stamp image:', stampPath, err)
                 })
-                
-                // FINAL check before adding - this is critical
-                if (stopAddingDefaultStampsRef.current) {
-                  console.log('Skipping default stamp (final check) - background was changed')
-                  return
-                }
-                
-                // Set custom properties directly (Fabric.js requirement for custom properties)
-                ;(stampImg as any).customId = `stamp-${Date.now()}-${index}`
-                ;(stampImg as any).objectType = 'stamp'
-                ;(stampImg as any).isDefaultStamp = true // Mark as default stamp
-                
-                // Store reference for easy removal later
-                defaultStampsRef.current.push(stampImg)
-                
-                currentCanvas.add(stampImg)
-                currentCanvas.renderAll()
-              }).catch((err) => {
-                console.error('Error loading stamp image:', stampPath, err)
-              })
-            }, index * 10) // Small delay between each stamp to prevent blocking
-          })
+              }, index * 10) // Small delay between each stamp to prevent blocking
+            })
+          }
           
-          canvas.renderAll()
-        }).catch((err) => {
-          console.error('Error loading default background image:', err)
-        })
+          // Start loading the background image
+          loadBackgroundImage()
         }
       }, 200) // Small delay to ensure canvas is ready
       
@@ -2261,47 +2330,110 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
         canvas.getObjects().filter((obj: any) => obj.isBackgroundRect).forEach((obj: any) => canvas.remove(obj))
       }
       
-      // Load the image and set it as background
-      FabricImage.fromURL(imageUrl, { crossOrigin: 'anonymous' }).then((img) => {
-        // Get fresh canvas reference in case it changed
+      // Load the image and set it as background with retry logic for iPad
+      const loadImageWithRetry = (retryCount = 0) => {
         const currentCanvas = fabricRef.current
-        if (!img || !currentCanvas) return
-        
-        // Double-check and remove any remaining default stamps (stamps may have loaded async)
-        const cleanupStamps = () => {
-          const canvasNow = fabricRef.current
-          if (!canvasNow) return
-          
-          // Clear ref first
-          defaultStampsRef.current.forEach((stamp) => {
-            try { canvasNow.remove(stamp) } catch (e) { /* ignore */ }
-          })
-          defaultStampsRef.current = []
-          
-          // Also remove any marked stamps
-          const remainingObjects = canvasNow.getObjects()
-          remainingObjects.forEach((obj: any) => {
-            if (obj.isDefaultStamp === true) {
-              canvasNow.remove(obj)
-            }
-          })
-          canvasNow.renderAll()
+        if (!currentCanvas) {
+          if (retryCount < 3) {
+            setTimeout(() => loadImageWithRetry(retryCount + 1), 500)
+          }
+          return
         }
-        
-        // Clean up now
-        cleanupStamps()
-        
-        // And clean up again after a delay to catch late-loading stamps
-        setTimeout(cleanupStamps, 500)
-        setTimeout(cleanupStamps, 1000)
         
         const canvasWidth = currentCanvas.width || 800
         const canvasHeight = currentCanvas.height || 600
         
-        // Store original dimensions for reset if needed
-        const originalWidth = img.width || 1
-        const originalHeight = img.height || 1
+        if (canvasWidth === 0 || canvasHeight === 0) {
+          if (retryCount < 5) {
+            setTimeout(() => loadImageWithRetry(retryCount + 1), 200)
+          }
+          return
+        }
         
+        FabricImage.fromURL(imageUrl, { crossOrigin: 'anonymous' })
+          .then((img) => {
+            // Get fresh canvas reference in case it changed
+            const canvasNow = fabricRef.current
+            if (!img || !canvasNow) {
+              if (retryCount < 3) {
+                setTimeout(() => loadImageWithRetry(retryCount + 1), 500)
+              }
+              return
+            }
+            
+            // Double-check and remove any remaining default stamps (stamps may have loaded async)
+            const cleanupStamps = () => {
+              const canvasNow = fabricRef.current
+              if (!canvasNow) return
+              
+              // Clear ref first
+              defaultStampsRef.current.forEach((stamp) => {
+                try { canvasNow.remove(stamp) } catch (e) { /* ignore */ }
+              })
+              defaultStampsRef.current = []
+              
+              // Also remove any marked stamps
+              const remainingObjects = canvasNow.getObjects()
+              remainingObjects.forEach((obj: any) => {
+                if (obj.isDefaultStamp === true) {
+                  canvasNow.remove(obj)
+                }
+              })
+              canvasNow.renderAll()
+            }
+            
+            // Clean up now
+            cleanupStamps()
+            
+            // And clean up again after a delay to catch late-loading stamps
+            setTimeout(cleanupStamps, 500)
+            setTimeout(cleanupStamps, 1000)
+            
+            const currentWidth = canvasNow.width || 800
+            const currentHeight = canvasNow.height || 600
+            
+            // Store original dimensions for reset if needed
+            let originalWidth = img.width || 1
+            let originalHeight = img.height || 1
+            
+            // Try to get dimensions from the underlying HTML image element (more reliable on iPad)
+            try {
+              const imgElement = img.getElement()
+              if (imgElement) {
+                if (imgElement.complete && imgElement.naturalWidth > 0) {
+                  originalWidth = imgElement.naturalWidth || imgElement.width || originalWidth
+                  originalHeight = imgElement.naturalHeight || imgElement.height || originalHeight
+                } else {
+                  // Image not loaded yet, wait for it
+                  imgElement.onload = () => {
+                    originalWidth = imgElement.naturalWidth || imgElement.width || originalWidth
+                    originalHeight = imgElement.naturalHeight || imgElement.height || originalHeight
+                    applyBackgroundImage(img, originalWidth, originalHeight, currentWidth, currentHeight, canvasNow)
+                  }
+                  imgElement.onerror = () => {
+                    console.error('Error loading background image element on iPad')
+                    if (retryCount < 3) {
+                      setTimeout(() => loadImageWithRetry(retryCount + 1), 1000)
+                    }
+                  }
+                  return
+                }
+              }
+            } catch (e) {
+              console.warn('Could not get image element dimensions:', e)
+            }
+            
+            applyBackgroundImage(img, originalWidth, originalHeight, currentWidth, currentHeight, canvasNow)
+          })
+          .catch((err) => {
+            console.error('Error loading background image (attempt ' + (retryCount + 1) + '):', imageUrl, err)
+            if (retryCount < 3) {
+              setTimeout(() => loadImageWithRetry(retryCount + 1), 1000)
+            }
+          })
+      }
+      
+      const applyBackgroundImage = (img: FabricImage, originalWidth: number, originalHeight: number, canvasWidth: number, canvasHeight: number, currentCanvas: Canvas) => {
         // Scale image to cover entire canvas (cover mode)
         const scaleX = canvasWidth / originalWidth
         const scaleY = canvasHeight / originalHeight
@@ -2355,9 +2487,10 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
         
         currentCanvas.renderAll()
         saveToHistoryRef.current()
-      }).catch((err) => {
-        console.error('Error loading background image:', imageUrl, err)
-      })
+      }
+      
+      // Start loading the image
+      loadImageWithRetry()
     }, [])
 
     const currentBg = backgrounds.find(bg => bg.value === currentBackground) || backgrounds[0]
