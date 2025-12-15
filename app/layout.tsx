@@ -35,7 +35,7 @@ const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://happybirthdaylauren
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: "Lauren's 30th Birthday Card Creator",
-  description: "Lauren's Bday Card Maker",
+  description: "Welcome to Lauren's Bday Card Maker",
   generator: "v0.app",
   icons: {
     icon: [
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Lauren's 30th Birthday Card Creator",
-    description: "Lauren's Bday Card Maker",
+    description: "Welcome to Lauren's Bday Card Maker",
     url: baseUrl,
     siteName: "Lauren's 30th Birthday Card Creator",
     images: [
@@ -58,7 +58,7 @@ export const metadata: Metadata = {
         url: "/thumbnail2.png", // Next.js will automatically make this absolute using metadataBase
         width: 1200,
         height: 630,
-        alt: "Lauren's Bday Card Maker",
+        alt: "Welcome to Lauren's Bday Card Maker",
       },
     ],
     type: "website",
@@ -67,7 +67,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Lauren's 30th Birthday Card Creator",
-    description: "Lauren's Bday Card Maker",
+    description: "Welcome to Lauren's Bday Card Maker",
     images: ["/thumbnail2.png"], // Next.js will automatically make this absolute using metadataBase
   },
 }
