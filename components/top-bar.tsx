@@ -329,10 +329,13 @@ export default function TopBar({ onHelpClick, canvasRef }: TopBarProps) {
 
       const stampCount = 8 + Math.floor(Math.random() * 3)
       const usedStamps = pickUnique(stamps, stampCount)
+      // Smaller stamps on mobile
+      const isMobile = window.innerWidth < 768
+      const stampSize = isMobile ? 40 : 64
       for (let i = 0; i < stampCount; i++) {
         const x = 0.1 + Math.random() * 0.8
         const y = 0.1 + Math.random() * 0.75
-        await addImage(usedStamps[i], canvasWidth * x, canvasHeight * y, 64, Math.random() * 40 - 20)
+        await addImage(usedStamps[i], canvasWidth * x, canvasHeight * y, stampSize, Math.random() * 40 - 20)
       }
 
       const foodY = canvasHeight * 0.62
@@ -405,20 +408,24 @@ export default function TopBar({ onHelpClick, canvasRef }: TopBarProps) {
         </div>
       </div>
       <div
-        className="px-3 py-1.5 text-xs font-bold border-b-2 border-primary flex items-center justify-between gap-2"
+        className="px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-bold border-b-2 border-primary flex items-center justify-between gap-1.5 sm:gap-2 overflow-x-auto"
         style={{ background: "linear-gradient(90deg, #fff0f7 0%, #e0b0ff 50%, #b0e0ff 100%)" }}
       >
-        <div className="flex gap-2 flex-wrap">
-          <MacButton accent onClick={handleNewCard}><span style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}>✨</span> New</MacButton>
-          <MacButton secondary onClick={handleRandomDesign} disabled={isGenerating}>
-            {isGenerating ? "✨ Creating..." : "🔀 Random Design"}
+        <div className="flex gap-1 sm:gap-2 items-center flex-shrink-0">
+          <MacButton accent onClick={handleNewCard} style={{ padding: "4px 8px", fontSize: "10px" }}>
+            <span style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}>✨</span> New
           </MacButton>
-          <MacButton primary onClick={handleSaveScreenshot} disabled={isExporting}>
-            {isExporting ? "💾 Saving..." : "💾 Save"}
+          <MacButton secondary onClick={handleRandomDesign} disabled={isGenerating} style={{ padding: "4px 8px", fontSize: "10px" }}>
+            {isGenerating ? "✨..." : "🔀 Random"}
           </MacButton>
-          <MacButton onClick={handleHelpClick}>💕 Help</MacButton>
+          <MacButton primary onClick={handleSaveScreenshot} disabled={isExporting} style={{ padding: "4px 8px", fontSize: "10px" }}>
+            {isExporting ? "💾..." : "💾 Save"}
+          </MacButton>
+          <MacButton onClick={handleHelpClick} style={{ padding: "4px 8px", fontSize: "10px" }}>💕 Help</MacButton>
         </div>
-        <Countdown targetDate="2025-12-21" timezone="America/Denver" />
+        <div className="hidden lg:block flex-shrink-0">
+          <Countdown targetDate="2025-12-21" timezone="America/Denver" />
+        </div>
       </div>
     </MacWindow>
   )

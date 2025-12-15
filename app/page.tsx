@@ -381,6 +381,9 @@ export default function Home() {
     const canvasWidth = fabricCanvas.width || 800
     const canvasHeight = fabricCanvas.height || 600
     
+    // Detect if mobile (smaller canvas typically means mobile)
+    const isMobile = canvasWidth < 768 || window.innerWidth < 768
+    
     // Generate 40-70 random stamps
     const numStamps = Math.floor(Math.random() * 31) + 40
     
@@ -394,12 +397,14 @@ export default function Home() {
     const shuffledStamps = availableStamps.sort(() => Math.random() - 0.5)
     const selectedStamps = shuffledStamps.slice(0, numStamps)
     
+    // Smaller stamp size on mobile
+    const stampSize = isMobile ? 32 : 48
+    
     // Add stamps with slight delays
     selectedStamps.forEach((stampNum, index) => {
       setTimeout(() => {
         const stampPath = `/stamps/kidpix-spritesheet-0-${stampNum}.png`
-        const stampSize = 48
-        const padding = 50
+        const padding = isMobile ? 30 : 50
         const x = Math.random() * (canvasWidth - padding * 2) + padding
         const y = Math.random() * (canvasHeight - padding * 2) + padding
         

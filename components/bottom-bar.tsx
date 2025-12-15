@@ -347,13 +347,16 @@ export default function BottomBar({ canvasRef }: BottomBarProps) {
         await addImage(randomPick(decorations), canvasWidth * 0.9, canvasHeight * 0.1, 55, 15)
       }
 
-      // 4. Add random stamps scattered throughout (8-10 stamps) - FIXED SIZE 64
+      // 4. Add random stamps scattered throughout (8-10 stamps) - Smaller on mobile
       const stampCount = 8 + Math.floor(Math.random() * 3) // 8-10 stamps
       const usedStamps = pickUnique(stamps, stampCount)
+      // Smaller stamps on mobile
+      const isMobile = window.innerWidth < 768
+      const stampSize = isMobile ? 40 : 64
       for (let i = 0; i < stampCount; i++) {
         const x = 0.1 + Math.random() * 0.8 // Keep away from edges
         const y = 0.1 + Math.random() * 0.75
-        await addImage(usedStamps[i], canvasWidth * x, canvasHeight * y, 64, Math.random() * 40 - 20)
+        await addImage(usedStamps[i], canvasWidth * x, canvasHeight * y, stampSize, Math.random() * 40 - 20)
       }
 
       // 5. Add LARGE CENTERED food item
