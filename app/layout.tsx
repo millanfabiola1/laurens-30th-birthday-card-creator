@@ -31,10 +31,10 @@ const instrumentSerif = Instrument_Serif({
 
 // Get base URL from environment variable or use default
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined)
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://v0-birthday-card-creator-oapww6aff.vercel.app')
 
 export const metadata: Metadata = {
-  ...(baseUrl && { metadataBase: new URL(baseUrl) }),
+  metadataBase: new URL(baseUrl),
   title: "Lauren's 30th Birthday Card Creator",
   description: "Lauren's Bday Card Maker",
   generator: "v0.app",
@@ -52,19 +52,24 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Lauren's 30th Birthday Card Creator",
     description: "Lauren's Bday Card Maker",
+    url: baseUrl,
+    siteName: "Lauren's 30th Birthday Card Creator",
     images: [
       {
-        url: "/thumbnail2.png",
+        url: "/thumbnail2.png", // Next.js will automatically make this absolute using metadataBase
+        width: 1200,
+        height: 630,
         alt: "Lauren's Bday Card Maker",
       },
     ],
     type: "website",
+    locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
     title: "Lauren's 30th Birthday Card Creator",
     description: "Lauren's Bday Card Maker",
-    images: ["/thumbnail2.png"],
+    images: ["/thumbnail2.png"], // Next.js will automatically make this absolute using metadataBase
   },
 }
 
