@@ -29,9 +29,8 @@ const instrumentSerif = Instrument_Serif({
   style: ["normal", "italic"],
 })
 
-// Get base URL from environment variable or use default
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://v0-birthday-card-creator-oapww6aff.vercel.app')
+// Get base URL from environment variable or use custom domain
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://happybirthdaylauren.com'
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
