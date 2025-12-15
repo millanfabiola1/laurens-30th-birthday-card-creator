@@ -1433,10 +1433,12 @@ const CanvasArea = forwardRef<FabricCanvasRef, CanvasAreaProps>(
               }
               
               const stampPath = `/stamps/kidpix-spritesheet-0-${stampNum}.png`
-              const stampSize = 48 // Fixed size for first-time visitor stamps
+              // Smaller stamps on mobile for first-time visitor stamps
+              const isMobile = window.innerWidth < 768
+              const stampSize = isMobile ? 32 : 48
               
               // Random position on canvas (with some padding from edges)
-              const padding = 50
+              const padding = isMobile ? 30 : 50
               const x = Math.random() * (canvasWidth - padding * 2) + padding
               const y = Math.random() * (canvasHeight - padding * 2) + padding
               
